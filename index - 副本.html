@@ -1,0 +1,708 @@
+<!doctype html>
+<!--[if lt IE 7 ]> <html lang="zh-CN" class="ie6"> <![endif]-->
+<!--[if IE 7 ]>    <html lang="zh-CN" class="ie7"> <![endif]-->
+<!--[if IE 8 ]>    <html lang="zh-CN" class="ie8"> <![endif]-->
+<!--[if IE 9 ]>    <html lang="zh-CN" class="ie9"> <![endif]-->
+<!--[if !IE]><!-->
+<html lang="zh-CN"> <!--<![endif]-->
+
+<head>
+	<title>岁月留痕 - 翻页杂志展示</title>
+	<meta name="viewport" content="width = 1050, user-scalable = no" />
+	<link rel="icon" href="favicon.ico" type="image/jpeg" />
+	<!-- <link rel="stylesheet" href="css/magazine.css" type="text/css" /> -->
+
+	<script type="text/javascript" src="extras/jquery.min.1.7.js"></script>
+	<script type="text/javascript" src="extras/modernizr.2.5.3.min.js"></script>
+	<script type="text/javascript" src="lib/hash.js"></script>
+	
+	<!-- 背景音乐 -->
+	<audio id="background-music" loop>  
+		<source src="extras/Wild - All My Life_min.mp3" type="audio/mpeg">
+		<!-- <source src="extras/music.ogg" type="audio/ogg"> -->
+		您的浏览器不支持音频元素。
+	</audio>
+
+</head>
+
+<body>
+
+	<!-- 封面页面 -->
+	<div id="cover-page">
+		<div class="cover-content">
+			<h1>岁月留痕</h1>
+			<p>点击下方按钮开始阅读</p>
+			<button id="open-book">翻开</button>
+		</div>
+	</div>
+
+	<div id="canvas">
+
+		<div class="zoom-icon zoom-icon-in"></div>
+		<!-- 音乐控制按钮 -->
+		<div class="music-control" id="music-control">
+			<span class="music-icon music-play"></span>
+		</div>
+
+		<div class="magazine-viewport">
+			<div class="container">
+				<div class="magazine">
+					<!-- 下一页按钮 -->
+					<div ignore="1" class="next-button"></div>
+					<!-- 上一页按钮 -->
+					<div ignore="1" class="previous-button"></div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 缩略图 -->
+		<div class="thumbnails">
+			<div>
+				<ul>
+				<li class="i">
+					<img src="pages/thumb/封面.png" width="76" height="100" class="page-1">
+					<span>1</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/冯羽童 高三五班 一树海棠，一程星光_01.png" width="76" height="100" class="page-2">
+					<img src="pages/thumb/刘亦晗 高三五班 《檐下海棠，此间青春》_01.png" width="76" height="100" class="page-3">
+					<span>2-3</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/刘博涵 高三五班 我与海棠的故事_01.png" width="76" height="100" class="page-4">
+					<img src="pages/thumb/刘宇轩 高三五班 我与海棠的故事_01.png" width="76" height="100" class="page-5">
+					<span>4-5</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/刘庆豪 高三五班 海棠轻绽_01.png" width="76" height="100" class="page-6">
+					<img src="pages/thumb/刘芮扬 高三五班 海棠依旧，我将远行_01.png" width="76" height="100" class="page-7">
+					<span>6-7</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/吕筱雯 高三五班 识亦海棠，分亦海棠_01.png" width="76" height="100" class="page-8">
+					<img src="pages/thumb/张同泽 高三五班 海棠花开_01.png" width="76" height="100" class="page-9">
+					<span>8-9</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/孙学峰 高三五班 海棠记，少年事_01.png" width="76" height="100" class="page-10">
+					<img src="pages/thumb/孙学峰 高三五班 海棠记，少年事_02.png" width="76" height="100" class="page-11">
+					<span>10-11</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/张心茹 高三五班 海棠树下的告白_01.png" width="76" height="100" class="page-12">
+					<img src="pages/thumb/张成林 高三五班 海棠花开又一年_01.png" width="76" height="100" class="page-13">
+					<span>12-13</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/张有强 高三五班 我与海棠_01.png" width="76" height="100" class="page-14">
+					<img src="pages/thumb/张有强 高三五班 我与海棠_02.png" width="76" height="100" class="page-15">
+					<span>14-15</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/彭岑 高三五班 我与海棠的故事_01.png" width="76" height="100" class="page-16">
+					<img src="pages/thumb/范柏唱 高三五班 致校园海棠：一封告白信.png" width="76" height="100" class="page-17">
+					<span>16-17</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/黄伟超 高三五班 海棠无香，青春有痕_01.png" width="76" height="100" class="page-18">
+					<img src="pages/thumb/黄伟超 高三五班 海棠无香，青春有痕_02.png" width="76" height="100" class="page-19">
+					<span>18-19</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/窦予男 高三五班 《海棠花开》_01.png" width="76" height="100" class="page-20">
+					<img src="pages/thumb/窦予男 高三五班 《海棠花开》_02.png" width="76" height="100" class="page-21">
+					<span>20-21</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/胡美萱 高三五班 一树海棠，半盏春光_01.png" width="76" height="100" class="page-22">
+					<img src="pages/thumb/胡美萱 高三五班 一树海棠，半盏春光_02.png" width="76" height="100" class="page-23">
+					<span>22-23</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/张长鑫 高三五班 赏海棠_01.png" width="76" height="100" class="page-24">
+					<img src="pages/thumb/王玉山 高三五班 《写个海棠的一封信》_01.png" width="76" height="100" class="page-25">
+					<span>24-25</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/李富雨 高三五班 《我与海棠的故事》_01.png" width="76" height="100" class="page-26">
+					<img src="pages/thumb/李富雨 高三五班 《我与海棠的故事》_02.png" width="76" height="100" class="page-27">
+					<span>26-27</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/杨博文 高三五班 海棠落满高中年_01.png" width="76" height="100" class="page-28">
+					<img src="pages/thumb/杨博文 高三五班 海棠落满高中年_02.png" width="76" height="100" class="page-29">
+					<span>28-29</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/杨学昊 高三五班 《钢中海棠，青春答卷》_01.png" width="76" height="100" class="page-30">
+					<img src="pages/thumb/杨学昊 高三五班 《钢中海棠，青春答卷》_02.png" width="76" height="100" class="page-31">
+					<span>30-31</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/王甲慧 高三五班 我与海棠_01.png" width="76" height="100" class="page-32">
+					<img src="pages/thumb/王甲慧 高三五班 我与海棠_02.png" width="76" height="100" class="page-33">
+					<span>32-33</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/王艺诺 高三五班 致我青春里的那株海棠_01.png" width="76" height="100" class="page-34">
+					<img src="pages/thumb/王艺诺 高三五班 致我青春里的那株海棠_02.png" width="76" height="100" class="page-35">
+					<span>34-35</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/王绪颖 高三五班 海棠寄我_01.png" width="76" height="100" class="page-36">
+					<img src="pages/thumb/谢承睿 高三五班 我的校园故事_01.png" width="76" height="100" class="page-37">
+					<span>36-37</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/赵潞祎 高三五班 《三个春天》_01.png" width="76" height="100" class="page-38">
+					<img src="pages/thumb/赵潞祎 高三五班 《三个春天》_02.png" width="76" height="100" class="page-39">
+					<span>38-39</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/郭永尚 高三五班 我与海棠的故事_01.png" width="76" height="100" class="page-40">
+					<img src="pages/thumb/郭永尚 高三五班 我与海棠的故事_02.png" width="76" height="100" class="page-41">
+					<span>40-41</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/郭洪妍 高三五班 爱与海棠_01.png" width="76" height="100" class="page-42">
+					<img src="pages/thumb/郭洪妍 高三五班 爱与海棠_02.png" width="76" height="100" class="page-43">
+					<span>42-43</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/郭洪妍 高三五班 爱与海棠_03.png" width="76" height="100" class="page-44">
+					<img src="pages/thumb/郭洪妍 高三五班 爱与海棠_04.png" width="76" height="100" class="page-45">
+					<span>44-45</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/郭洪妍 高三五班 爱与海棠_05.png" width="76" height="100" class="page-46">
+					<img src="pages/thumb/贯梓悦 高三五班 海棠花开处青春永不谢_01.png" width="76" height="100" class="page-47">
+					<span>46-47</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/闫奥若 高三五班 致海棠花_01.png" width="76" height="100" class="page-48">
+					<img src="pages/thumb/闫奥若 高三五班 致海棠花_02.png" width="76" height="100" class="page-49">
+					<span>48-49</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/陈秋雯 高三五班 花语_01.png" width="76" height="100" class="page-50">
+					<img src="pages/thumb/陈秋雯 高三五班 花语_02.png" width="76" height="100" class="page-51">
+					<span>50-51</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/韩依晨 高三五班 我与海棠的故事_01.png" width="76" height="100" class="page-52">
+					<img src="pages/thumb/韩依晨 高三五班 我与海棠的故事_02.png" width="76" height="100" class="page-53">
+					<span>52-53</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/黄蕊 高三五班 海棠与我共春风_01.png" width="76" height="100" class="page-54">
+					<img src="pages/thumb/黄蕊 高三五班 海棠与我共春风_02.png" width="76" height="100" class="page-55">
+					<span>54-55</span>
+				</li>
+				<li class="d">
+					<img src="pages/thumb/魏雨润 高三五班 《海棠记忆》_01.png" width="76" height="100" class="page-56">
+					<img src="pages/thumb/封尾.png" width="76" height="100" class="page-57">
+					<span>56-57</span>
+				</li>
+			</ul>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+
+		// 预加载封面图片
+		function preloadImages() {
+			var images = [
+				'pages/thumb/封面.png'
+			];
+			
+			for (var i = 0; i < images.length; i++) {
+				var img = new Image();
+				img.src = images[i];
+			}
+		}
+
+		// 页面加载时预加载图片
+		window.onload = function() {
+			preloadImages();
+		};
+
+		function loadApp() {
+
+			$('#canvas').fadeIn(1000);
+
+			var flipbook = $('.magazine');
+
+			// 检查CSS是否已加载
+
+			if (flipbook.width() == 0 || flipbook.height() == 0) {
+				setTimeout(loadApp, 10);
+				return;
+			}
+
+			// 创建翻页效果
+
+			flipbook.turn({
+
+				// 杂志宽度
+
+				width: 922,
+
+				// 杂志高度
+
+				height: 600,
+
+				// 动画持续时间（毫秒）
+
+				duration: 1000,
+
+				// 硬件加速
+
+				acceleration: !isChrome(),
+
+				// 启用渐变
+
+				gradients: true,
+
+				// 自动居中
+
+				autoCenter: true,
+
+				// 翻页时的边缘高度
+
+				elevation: 50,
+
+				// 页数
+
+				pages: 57,
+
+				// 事件
+
+				when: {
+					turning: function (event, page, view) {
+
+						var book = $(this),
+							currentPage = book.turn('page'),
+							pages = book.turn('pages');
+
+						// 更新当前URI
+
+						Hash.go('page/' + page).update();
+
+						// 显示和隐藏导航按钮
+
+						disableControls(page);
+
+
+						$('.thumbnails .page-' + currentPage).
+							parent().
+							removeClass('current');
+
+						$('.thumbnails .page-' + page).
+							parent().
+							addClass('current');
+
+						// 平滑滚动到当前选中的缩略图
+						setTimeout(function() {
+							var currentThumb = $('.thumbnails .current');
+							if (currentThumb.length > 0) {
+								var container = $('.thumbnails > div');
+								var containerRect = container[0].getBoundingClientRect();
+								var thumbRect = currentThumb[0].getBoundingClientRect();
+								
+								// 计算缩略图中心相对于容器中心的偏移
+								var containerCenter = containerRect.left + containerRect.width / 2;
+								var thumbCenter = thumbRect.left + thumbRect.width / 2;
+								var offset = thumbCenter - containerCenter;
+								
+								// 计算新的滚动位置
+								var currentScrollLeft = container.scrollLeft();
+								var newScrollLeft = currentScrollLeft + offset;
+								
+								// 确保滚动位置在有效范围内
+								newScrollLeft = Math.max(0, newScrollLeft);
+								var maxScrollLeft = container[0].scrollWidth - containerRect.width;
+								newScrollLeft = Math.min(newScrollLeft, maxScrollLeft);
+								
+								// 执行平滑滚动
+								container.animate({ scrollLeft: newScrollLeft }, 500);
+							}
+						}, 100);
+
+
+
+
+					},
+
+					turned: function (event, page, view) {
+
+						disableControls(page);
+
+						$(this).turn('center');
+
+						if (page == 1) {
+							$(this).turn('peel', 'br');
+						}
+
+					},
+
+					missing: function (event, pages) {
+
+						// 添加不在杂志中的页面
+
+						for (var i = 0; i < pages.length; i++)
+							addPage(pages[i], $(this));
+
+					}
+				}
+
+			});
+
+			// Zoom.js
+
+			$('.magazine-viewport').zoom({
+				flipbook: $('.magazine'),
+
+				max: function () {
+
+					return largeMagazineWidth() / $('.magazine').width();
+
+				},
+
+				when: {
+
+					swipeLeft: function () {
+
+						$(this).zoom('flipbook').turn('next');
+
+					},
+
+					swipeRight: function () {
+
+						$(this).zoom('flipbook').turn('previous');
+
+					},
+
+					resize: function (event, scale, page, pageElement) {
+
+						if (scale == 1)
+							loadSmallPage(page, pageElement);
+						else
+							loadLargePage(page, pageElement);
+
+					},
+
+					zoomIn: function () {
+
+						$('.thumbnails').hide();
+						$('.made').hide();
+						$('.magazine').removeClass('animated').addClass('zoom-in');
+						$('.zoom-icon').removeClass('zoom-icon-in').addClass('zoom-icon-out');
+
+						if (!window.escTip && !$.isTouch) {
+							escTip = true;
+
+							$('<div />', { 'class': 'exit-message' }).
+								html('<div>按ESC键退出</div>').
+								appendTo($('body')).
+								delay(2000).
+								animate({ opacity: 0 }, 500, function () {
+									$(this).remove();
+								});
+						}
+					},
+
+					zoomOut: function () {
+
+						$('.exit-message').hide();
+						$('.thumbnails').fadeIn();
+						$('.made').fadeIn();
+						$('.zoom-icon').removeClass('zoom-icon-out').addClass('zoom-icon-in');
+
+						setTimeout(function () {
+							$('.magazine').addClass('animated').removeClass('zoom-in');
+							resizeViewport();
+						}, 0);
+
+					}
+				}
+			});
+
+			// 缩放事件
+
+			if ($.isTouch)
+				$('.magazine-viewport').bind('zoom.doubleTap', zoomTo);
+			else
+				$('.magazine-viewport').bind('zoom.tap', zoomTo);
+
+
+			// 使用箭头键翻页
+
+			$(document).keydown(function (e) {
+
+				var previous = 37, next = 39, esc = 27;
+
+				switch (e.keyCode) {
+					case previous:
+
+						// 左箭头
+						$('.magazine').turn('previous');
+						e.preventDefault();
+
+						break;
+					case next:
+
+						//右箭头
+						$('.magazine').turn('next');
+						e.preventDefault();
+
+						break;
+					case esc:
+
+						$('.magazine-viewport').zoom('zoomOut');
+						e.preventDefault();
+
+						break;
+				}
+			});
+
+			// URIs - 格式 #/page/1 
+
+			Hash.on('^page\/([0-9]*)$', {
+				yep: function (path, parts) {
+					var page = parts[1];
+
+					if (page !== undefined) {
+						if ($('.magazine').turn('is'))
+							$('.magazine').turn('page', page);
+					}
+
+				},
+				nop: function (path) {
+
+					if ($('.magazine').turn('is'))
+						$('.magazine').turn('page', 1);
+				}
+			});
+
+
+			$(window).resize(function () {
+				resizeViewport();
+			}).bind('orientationchange', function () {
+				resizeViewport();
+			});
+
+			// 缩略图事件
+
+			$('.thumbnails').click(function (event) {
+
+				var page;
+
+				if (event.target && (page = /page-([0-9]+)/.exec($(event.target).attr('class')))) {
+
+					$('.magazine').turn('page', page[1]);
+				}
+			});
+
+			$('.thumbnails li').
+				bind($.mouseEvents.over, function (e) {
+					// 计算鼠标在元素内的位置
+					var rect = this.getBoundingClientRect();
+					var x = ((e.clientX - rect.left) / rect.width) * 100;
+					var y = ((e.clientY - rect.top) / rect.height) * 100;
+					// 设置变换原点为鼠标位置
+					$(this).css('transform-origin', x + '% ' + y + '%');
+					$(this).addClass('thumb-hover');
+				}).bind($.mouseEvents.out, function () {
+					// 重置变换原点
+					$(this).css('transform-origin', '50% 50%');
+					$(this).removeClass('thumb-hover');
+				});
+
+			if ($.isTouch) {
+
+				$('.thumbnails').
+					addClass('thumbanils-touch').
+					bind($.mouseEvents.move, function (event) {
+						event.preventDefault();
+					});
+
+			} else {
+
+				$('.thumbnails ul').mouseover(function () {
+
+					$('.thumbnails').addClass('thumbnails-hover');
+
+				}).mousedown(function () {
+
+					return false;
+
+				}).mouseout(function () {
+
+					$('.thumbnails').removeClass('thumbnails-hover');
+
+				});
+
+				// 添加鼠标滚轮事件，实现横向滚动
+				$('.thumbnails').bind('mousewheel DOMMouseScroll', function(e) {
+					var scrollDirection = e.originalEvent.wheelDelta || -e.originalEvent.detail;
+					var scrollDistance = scrollDirection > 0 ? -50 : 50;
+					$(this).find('div').animate({ scrollLeft: '+=' + scrollDistance }, 100);
+					e.preventDefault();
+				});
+
+			}
+
+
+			// 区域点击
+
+			if ($.isTouch) {
+				$('.magazine').bind('touchstart', regionClick);
+			} else {
+				$('.magazine').click(regionClick);
+			}
+
+			// 下一页按钮事件
+
+			$('.next-button').bind($.mouseEvents.over, function () {
+
+				$(this).addClass('next-button-hover');
+
+			}).bind($.mouseEvents.out, function () {
+
+				$(this).removeClass('next-button-hover');
+
+			}).bind($.mouseEvents.down, function () {
+
+				$(this).addClass('next-button-down');
+
+			}).bind($.mouseEvents.up, function () {
+
+				$(this).removeClass('next-button-down');
+
+			}).click(function () {
+
+				$('.magazine').turn('next');
+
+			});
+
+			// 上一页按钮事件
+
+			$('.previous-button').bind($.mouseEvents.over, function () {
+
+				$(this).addClass('previous-button-hover');
+
+			}).bind($.mouseEvents.out, function () {
+
+				$(this).removeClass('previous-button-hover');
+
+			}).bind($.mouseEvents.down, function () {
+
+				$(this).addClass('previous-button-down');
+
+			}).bind($.mouseEvents.up, function () {
+
+				$(this).removeClass('previous-button-down');
+
+			}).click(function () {
+
+				$('.magazine').turn('previous');
+
+			});
+
+
+			resizeViewport();
+
+			$('.magazine').addClass('animated');
+
+		}
+
+		// 缩放图标
+
+		$('.zoom-icon').bind('mouseover', function () {
+
+			if ($(this).hasClass('zoom-icon-in'))
+				$(this).addClass('zoom-icon-in-hover');
+
+			if ($(this).hasClass('zoom-icon-out'))
+				$(this).addClass('zoom-icon-out-hover');
+
+		}).bind('mouseout', function () {
+
+			if ($(this).hasClass('zoom-icon-in'))
+				$(this).removeClass('zoom-icon-in-hover');
+
+			if ($(this).hasClass('zoom-icon-out'))
+				$(this).removeClass('zoom-icon-out-hover');
+
+		}).bind('click', function () {
+
+			if ($(this).hasClass('zoom-icon-in'))
+				$('.magazine-viewport').zoom('zoomIn');
+			else if ($(this).hasClass('zoom-icon-out'))
+				$('.magazine-viewport').zoom('zoomOut');
+
+		});
+
+		// 音乐控制
+		var music = document.getElementById('background-music');
+		var musicControl = $('#music-control');
+		var musicIcon = musicControl.find('.music-icon');
+
+		// 初始状态：暂停
+		musicIcon.addClass('music-pause').removeClass('music-play');
+
+		// 点击控制音乐播放/暂停
+		musicControl.click(function() {
+			if (music.paused) {
+				music.play();
+				musicIcon.addClass('music-play').removeClass('music-pause');
+			} else {
+				music.pause();
+				musicIcon.addClass('music-pause').removeClass('music-play');
+			}
+		});
+
+		// 封面页面控制
+		var coverPage = $('#cover-page');
+		var canvas = $('#canvas');
+		var openBookBtn = $('#open-book');
+
+		// 初始状态：隐藏canvas
+		canvas.hide();
+
+		// 点击翻开按钮
+		openBookBtn.click(function() {
+			// 隐藏封面页面
+			coverPage.addClass('hidden');
+			// 显示canvas
+			canvas.show().addClass('visible');
+			// 播放音乐
+			music.play();
+			// 更新音乐控制按钮状态
+			musicIcon.addClass('music-play').removeClass('music-pause');
+			// 初始化应用
+			loadApp();
+		});
+
+
+		// 加载HTML4版本（如果没有CSS变换）
+
+		// 假设loadSmallPage, loadLargePage, largeMagazineWidth, disableControls, regionClick, isChrome等函数在其他文件中定义
+
+		// 加载所需的JavaScript和CSS文件
+		yepnope({
+			test: Modernizr.csstransforms,
+			yep: ['lib/turn.js'],
+			nope: ['lib/turn.html4.min.js'],
+			both: ['lib/zoom.min.js', 'js/magazine.js', 'css/magazine.css'],
+			complete: function() {
+				// 不自动初始化，等待用户点击翻开按钮
+			}
+		});
+
+	</script>
+
+</body>
+
+</html>

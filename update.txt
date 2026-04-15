@@ -1,0 +1,6 @@
+git init
+git remote add origin https://github.com/HorizonWayfarer/Fleeting-Bloom-Chronicles.git
+git add .
+git commit -m "update project"
+git branch -M main
+git push -f origin main
