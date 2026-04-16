@@ -96,7 +96,15 @@ function generateThumbnail(pageNum, width, height, callback) {
 
 function updateLoadingProgress(completed, total) {
     var progress = Math.round((completed / total) * 100);
-    $('#loading').text('正在加载杂志... ' + progress + '%');
+    $('#loading').text('正在生成缩略图...');
+    $('.progress-fill').css('width', progress + '%');
+    $('.progress-text').text(progress + '%');
+}
+
+function setLoadingProgress(progress, text) {
+    $('#loading').text(text);
+    $('.progress-fill').css('width', progress + '%');
+    $('.progress-text').text(progress + '%');
 }
 
 function generateAllThumbnails(callback) {
@@ -108,16 +116,38 @@ function generateAllThumbnails(callback) {
     }
     
     var completed = 0;
+    var currentPage = 1;
+    var batchSize = 3;
+    
     updateLoadingProgress(0, totalPages);
-    for (var i = 1; i <= totalPages; i++) {
-        generateThumbnail(i, 76, 100, function() {
-            completed++;
-            updateLoadingProgress(completed, totalPages);
-            if (completed === totalPages && callback) {
-                callback();
-            }
-        });
+    
+    function generateBatch() {
+        var endPage = Math.min(currentPage + batchSize - 1, totalPages);
+        var batchCompleted = 0;
+        
+        function processPage(pageNum) {
+            generateThumbnail(pageNum, 76, 100, function() {
+                completed++;
+                batchCompleted++;
+                updateLoadingProgress(completed, totalPages);
+                
+                if (completed === totalPages && callback) {
+                    callback();
+                } else if (batchCompleted === (endPage - currentPage + 1)) {
+                    currentPage = endPage + 1;
+                    if (currentPage <= totalPages) {
+                        setTimeout(generateBatch, 50);
+                    }
+                }
+            });
+        }
+        
+        for (var i = currentPage; i <= endPage; i++) {
+            processPage(i);
+        }
     }
+    
+    setTimeout(generateBatch, 0);
 }
 
 function addPage(page, book) {

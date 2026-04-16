@@ -16,11 +16,28 @@
 	<script type="text/javascript" src="extras/modernizr.2.5.3.min.js"></script>
 	<script type="text/javascript" src="lib/hash.js"></script>
 	<script type="text/javascript" src="js/pdf.min.js"></script>
-	
-	<audio id="background-music" loop>  
+
+	<audio id="background-music" loop>
 		<source src="extras/Wild - All My Life_min.mp3" type="audio/mpeg">
 		您的浏览器不支持音频元素。
 	</audio>
+	<style type="text/css">
+		@font-face {
+			font-family: 'LXGW WenKai';
+			src: url('../extras/LXGWWenKai-Medium.ttf') format('truetype');
+			font-weight: normal;
+			font-style: normal;
+			font-display: swap;
+		}
+
+		body {
+			overflow: hidden;
+			background-color: #f5f0e6;
+			margin: 0;
+			padding: 0;
+			font-family: 'LXGW WenKai', 'Georgia', serif;
+		}
+	</style>
 
 </head>
 
@@ -30,7 +47,21 @@
 			<h1>岁月留痕</h1>
 			<p>点击下方按钮开始阅读</p>
 			<div class="loading" id="loading">正在加载杂志...</div>
-			<button id="open-book" disabled>翻开</button>
+			<div class="progress-container">
+				<div class="progress-bar">
+					<div class="progress-fill"></div>
+				</div>
+				<div class="progress-text">0%</div>
+			</div>
+			<button id="open-book">翻开</button>
+		</div>
+	</div>
+
+	<div class="custom-alert-overlay" id="custom-alert-overlay">
+		<div class="custom-alert">
+			<div class="custom-alert-icon">⏳</div>
+			<div class="custom-alert-message" id="alert-message">正在加载杂志，请稍候...</div>
+			<button class="custom-alert-button" id="alert-button">确定</button>
 		</div>
 	</div>
 
@@ -66,12 +97,12 @@
 
 		function checkMobile() {
 			isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-					   (window.innerWidth <= 768);
+				(window.innerWidth <= 768);
 			return isMobile;
 		}
 
 		function preloadPDF(callback) {
-			initPDF('pages/magazine.pdf', function(pdf, error) {
+			initPDF('pages/magazine.pdf', function (pdf, error) {
 				if (error) {
 					console.error('PDF加载失败:', error);
 					alert('PDF加载失败，请检查文件路径');
@@ -118,24 +149,24 @@
 						$('.thumbnails .page-' + currentPage).parent().removeClass('current');
 						$('.thumbnails .page-' + page).parent().addClass('current');
 
-						setTimeout(function() {
+						setTimeout(function () {
 							var currentThumb = $('.thumbnails .current');
 							if (currentThumb.length > 0) {
 								var container = $('.thumbnails > div');
 								var containerRect = container[0].getBoundingClientRect();
 								var thumbRect = currentThumb[0].getBoundingClientRect();
-								
+
 								var containerCenter = containerRect.left + containerRect.width / 2;
 								var thumbCenter = thumbRect.left + thumbRect.width / 2;
 								var offset = thumbCenter - containerCenter;
-								
+
 								var currentScrollLeft = container.scrollLeft();
 								var newScrollLeft = currentScrollLeft + offset;
-								
+
 								newScrollLeft = Math.max(0, newScrollLeft);
 								var maxScrollLeft = container[0].scrollWidth - containerRect.width;
 								newScrollLeft = Math.min(newScrollLeft, maxScrollLeft);
-								
+
 								container.animate({ scrollLeft: newScrollLeft }, 500);
 							}
 						}, 100);
@@ -280,7 +311,7 @@
 					$('.thumbnails').removeClass('thumbnails-hover');
 				});
 
-				$('.thumbnails').bind('mousewheel DOMMouseScroll', function(e) {
+				$('.thumbnails').bind('mousewheel DOMMouseScroll', function (e) {
 					var scrollDirection = e.originalEvent.wheelDelta || -e.originalEvent.detail;
 					var scrollDistance = scrollDirection > 0 ? -50 : 50;
 					$(this).find('div').animate({ scrollLeft: '+=' + scrollDistance }, 100);
@@ -345,7 +376,7 @@
 
 		musicIcon.addClass('music-pause').removeClass('music-play');
 
-		musicControl.click(function() {
+		musicControl.click(function () {
 			if (music.paused) {
 				music.play();
 				musicIcon.addClass('music-play').removeClass('music-pause');
@@ -359,28 +390,102 @@
 		var canvas = $('#canvas');
 		var openBookBtn = $('#open-book');
 		var loading = $('#loading');
+		var isPDFLoading = false;
+		var isPDFLoaded = false;
+		var alertOverlay = $('#custom-alert-overlay');
+		var alertMessage = $('#alert-message');
+		var alertButton = $('#alert-button');
+
+		function showAlert(message) {
+			alertMessage.text(message);
+			alertOverlay.addClass('show');
+		}
+
+		function hideAlert() {
+			alertOverlay.removeClass('show');
+		}
+
+		alertButton.click(hideAlert);
 
 		canvas.hide();
-
 		checkMobile();
-		preloadPDF(function() {
-			generateAllThumbnails(function() {
-				setMobileMode(isMobile);
-				buildThumbnails();
-				loading.hide();
-				openBookBtn.removeAttr('disabled');
+
+		function startPDFLoading() {
+			if (isPDFLoading || isPDFLoaded) return;
+			
+			isPDFLoading = true;
+			setLoadingProgress(5, '正在加载PDF...');
+			
+			preloadPDF(function(pdf, error) {
+				isPDFLoading = false;
+				
+				if (error) {
+					setLoadingProgress(0, 'PDF加载失败，请刷新重试');
+					return;
+				}
+				
+				setLoadingProgress(10, '正在生成缩略图...');
+				
+				generateAllThumbnails(function() {
+					setLoadingProgress(100, '加载完成');
+					setMobileMode(isMobile);
+					buildThumbnails();
+					setTimeout(function() {
+						isPDFLoaded = true;
+						loading.hide();
+						$('.progress-container').hide();
+						openBookBtn.removeAttr('disabled');
+					}, 300);
+				});
 			});
+		}
+
+		function loadFontAndPDF() {
+			if ('fonts' in document) {
+				var font = new FontFace('LXGW WenKai', 'url(extras/LXGWWenKaiLite-Medium.woff2) format("woff2")');
+				font.load().then(function(loadedFont) {
+					document.fonts.add(loadedFont);
+					startPDFLoading();
+				}).catch(function(error) {
+					console.warn('WOFF2字体加载失败，尝试TTF:', error);
+					var ttfFont = new FontFace('LXGW WenKai', 'url(extras/LXGWWenKaiLite-Medium.ttf) format("truetype")');
+					ttfFont.load().then(function(loadedFont) {
+						document.fonts.add(loadedFont);
+						startPDFLoading();
+					}).catch(function(ttfError) {
+						console.warn('TTF字体加载也失败，继续加载PDF:', ttfError);
+						startPDFLoading();
+					});
+				});
+			} else {
+				setTimeout(startPDFLoading, 300);
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', function () {
+			setTimeout(loadFontAndPDF, 100);
 		});
 
-		openBookBtn.click(function() {
-			if (!isBookOpen) {
-				coverPage.addClass('hidden');
-				canvas.show().addClass('visible');
-				music.play();
-				musicIcon.addClass('music-play').removeClass('music-pause');
-				loadApp();
-				isBookOpen = true;
+		window.addEventListener('load', function() {
+			if (!isPDFLoading && !isPDFLoaded) {
+				startPDFLoading();
 			}
+		});
+
+		openBookBtn.click(function () {			
+			if (isBookOpen) return;
+
+			if (!isPDFLoaded) {
+				showAlert('正在加载杂志，请稍候...');
+				return;
+			}
+
+			coverPage.addClass('hidden');
+			canvas.show().addClass('visible');
+			music.play();
+			musicIcon.addClass('music-play').removeClass('music-pause');
+			loadApp();
+			isBookOpen = true;
 		});
 
 		yepnope({
@@ -388,7 +493,7 @@
 			yep: ['lib/turn.js'],
 			nope: ['lib/turn.html4.min.js'],
 			both: ['lib/zoom.min.js'],
-			complete: function() {
+			complete: function () {
 			}
 		});
 	</script>
