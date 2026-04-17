@@ -21,10 +21,20 @@
 		<source src="extras/Wild - All My Life_min.mp3" type="audio/mpeg">
 		您的浏览器不支持音频元素。
 	</audio>
+
 	<style type="text/css">
 		@font-face {
+			font-family: 'Dutch 801 Roman';
+			src: url('extras/Dutch 801 Roman BT.ttf') format('truetype');
+			font-weight: normal;
+			font-style: normal;
+			font-display: swap;
+		}
+
+		@font-face {
 			font-family: 'LXGW WenKai';
-			src: url('../extras/LXGWWenKai-Medium.ttf') format('truetype');
+			src: url('extras/LXGWWenKaiLite-Medium.woff2') format('woff2'),
+				 url('extras/LXGWWenKaiLite-Medium.ttf') format('truetype');
 			font-weight: normal;
 			font-style: normal;
 			font-display: swap;
@@ -35,7 +45,78 @@
 			background-color: #f5f0e6;
 			margin: 0;
 			padding: 0;
+			font-family: 'Dutch 801 Roman', 'LXGW WenKai', 'Georgia', serif;
+		}
+
+		.custom-alert-overlay {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.5);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			z-index: 10000;
+			opacity: 0;
+			visibility: hidden;
+			transition: all 0.3s ease;
+		}
+
+		.custom-alert-overlay.show {
+			opacity: 1;
+			visibility: visible;
+		}
+
+		.custom-alert {
+			background-color: #f9f4ea;
+			border: 2px solid #8b4513;
+			border-radius: 8px;
+			padding: 30px 40px;
+			max-width: 350px;
+			width: 90%;
+			text-align: center;
+			box-shadow: 0 10px 30px rgba(139, 69, 19, 0.4);
+			transform: scale(0.8);
+			transition: transform 0.3s ease;
+		}
+
+		.custom-alert-overlay.show .custom-alert {
+			transform: scale(1);
+		}
+
+		.custom-alert-icon {
+			font-size: 48px;
+			margin-bottom: 15px;
+		}
+
+		.custom-alert-message {
+			font-size: 1.1em;
+			color: #5d3a1a;
+			margin-bottom: 20px;
+			line-height: 1.6;
+		}
+
+		.custom-alert-button {
+			background-color: #8b4513;
+			color: #fff;
+			border: none;
+			padding: 10px 30px;
+			font-size: 1em;
+			border-radius: 4px;
+			cursor: pointer;
 			font-family: 'LXGW WenKai', 'Georgia', serif;
+			transition: all 0.2s ease;
+		}
+
+		.custom-alert-button:hover {
+			background-color: #a0522d;
+			transform: translateY(-2px);
+		}
+
+		.custom-alert-button:active {
+			transform: translateY(0);
 		}
 	</style>
 
@@ -440,30 +521,36 @@
 			});
 		}
 
-		function loadFontAndPDF() {
+		function loadSecondaryResources() {
+			var woff2Font = new FontFace('LXGW WenKai', 'url(extras/LXGWWenKaiLite-Medium.woff2) format("woff2")');
+			woff2Font.load().then(function(loadedFont) {
+				document.fonts.add(loadedFont);
+			}).catch(function(error) {
+				console.warn('WOFF2字体加载失败:', error);
+			});
+			
+			startPDFLoading();
+		}
+
+		function loadPrimaryFont() {
+			setLoadingProgress(0, '正在加载字体...');
+			
 			if ('fonts' in document) {
-				var font = new FontFace('LXGW WenKai', 'url(extras/LXGWWenKaiLite-Medium.woff2) format("woff2")');
-				font.load().then(function(loadedFont) {
+				var primaryFont = new FontFace('Dutch 801 Roman', 'url(extras/Dutch 801 Roman BT.ttf) format("truetype")');
+				primaryFont.load().then(function(loadedFont) {
 					document.fonts.add(loadedFont);
-					startPDFLoading();
+					loadSecondaryResources();
 				}).catch(function(error) {
-					console.warn('WOFF2字体加载失败，尝试TTF:', error);
-					var ttfFont = new FontFace('LXGW WenKai', 'url(extras/LXGWWenKaiLite-Medium.ttf) format("truetype")');
-					ttfFont.load().then(function(loadedFont) {
-						document.fonts.add(loadedFont);
-						startPDFLoading();
-					}).catch(function(ttfError) {
-						console.warn('TTF字体加载也失败，继续加载PDF:', ttfError);
-						startPDFLoading();
-					});
+					console.warn('主字体加载失败，继续加载其他资源:', error);
+					loadSecondaryResources();
 				});
 			} else {
-				setTimeout(startPDFLoading, 300);
+				setTimeout(loadSecondaryResources, 100);
 			}
 		}
 
 		document.addEventListener('DOMContentLoaded', function () {
-			setTimeout(loadFontAndPDF, 100);
+			setTimeout(loadPrimaryFont, 50);
 		});
 
 		window.addEventListener('load', function() {
