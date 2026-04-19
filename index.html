@@ -437,6 +437,21 @@
 			}
 		});
 
+		var wasPlayingBeforeLeave = false;
+
+		document.addEventListener('visibilitychange', function () {
+			if (document.hidden) {
+				wasPlayingBeforeLeave = !music.paused;
+				if (!music.paused) {
+					music.pause();
+				}
+			} else {
+				if (wasPlayingBeforeLeave && isBookOpen) {
+					music.play();
+				}
+			}
+		});
+
 		var coverPage = $('#cover-page');
 		var canvas = $('#canvas');
 		var openBookBtn = $('#open-book');
