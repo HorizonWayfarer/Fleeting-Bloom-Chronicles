@@ -929,3 +929,48 @@ body {
 		display: none;
 	}
 }
+
+/* 微信浏览器提示样式 */
+.wechat-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.85);
+	z-index: 99999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.wechat-content {
+	background-color: #f9f4ea;
+	border: 2px solid #8b4513;
+	border-radius: 15px;
+	padding: 40px 30px;
+	max-width: 350px;
+	width: 90%;
+	text-align: center;
+	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.wechat-icon {
+	font-size: 60px;
+	margin-bottom: 20px;
+}
+
+.wechat-title {
+	font-size: 22px;
+	font-weight: bold;
+	color: #8b4513;
+	margin-bottom: 15px;
+	font-family: 'LXGW WenKai', 'Georgia', serif;
+}
+
+.wechat-desc {
+	font-size: 16px;
+	color: #5d3a1a;
+	line-height: 1.6;
+	font-family: 'LXGW WenKai', 'Georgia', serif;
+}

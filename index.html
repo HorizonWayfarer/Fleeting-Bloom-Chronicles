@@ -560,6 +560,18 @@
 			isBookOpen = true;
 		});
 
+		function isWeChatBrowser() {
+			return /MicroMessenger/i.test(navigator.userAgent);
+		}
+
+		if (isWeChatBrowser()) {
+			var wechatOverlay = $('<div class="wechat-overlay">');
+			var wechatContent = $('<div class="wechat-content">');
+			wechatContent.html('<div class="wechat-icon">📱</div><div class="wechat-title">请使用浏览器打开</div><div class="wechat-desc">本页面在微信内置浏览器中可能无法正常显示，请点击右上角选择"在浏览器中打开"</div>');
+			wechatOverlay.append(wechatContent);
+			$('body').append(wechatOverlay);
+		}
+
 		yepnope({
 			test: Modernizr.csstransforms,
 			yep: ['lib/turn.js'],
