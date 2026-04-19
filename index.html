@@ -476,6 +476,10 @@
 		canvas.hide();
 		checkMobile();
 
+		function isWeChatBrowser() {
+			return /MicroMessenger/i.test(navigator.userAgent);
+		}
+
 		function startPDFLoading() {
 			if (isPDFLoading || isPDFLoaded) return;
 			
@@ -514,7 +518,9 @@
 				console.warn('WOFF2字体加载失败:', error);
 			});
 			
-			startPDFLoading();
+			if (!isWeChatBrowser()) {
+				startPDFLoading();
+			}
 		}
 
 		function loadPrimaryFont() {
@@ -559,10 +565,6 @@
 			loadApp();
 			isBookOpen = true;
 		});
-
-		function isWeChatBrowser() {
-			return /MicroMessenger/i.test(navigator.userAgent);
-		}
 
 		if (isWeChatBrowser()) {
 			var wechatOverlay = $('<div class="wechat-overlay">');
