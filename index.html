@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <!--[if lt IE 7 ]> <html lang="zh-CN" class="ie6"> <![endif]-->
 <!--[if IE 7 ]>    <html lang="zh-CN" class="ie7"> <![endif]-->
 <!--[if IE 8 ]>    <html lang="zh-CN" class="ie8"> <![endif]-->
@@ -8,7 +8,7 @@
 
 <head>
 	<title>岁月留痕 - 翻页杂志展示</title>
-	<meta name="viewport" content="width = 1050, user-scalable = no" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=3.0" />
 	<link rel="icon" href="favicon.ico" type="image/jpeg" />
 	<link rel="stylesheet" href="css/magazine.css" type="text/css" />
 
@@ -47,77 +47,6 @@
 			padding: 0;
 			font-family: 'Dutch 801 Roman', 'LXGW WenKai', 'Georgia', serif;
 		}
-
-		.custom-alert-overlay {
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background-color: rgba(0, 0, 0, 0.5);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			z-index: 10000;
-			opacity: 0;
-			visibility: hidden;
-			transition: all 0.3s ease;
-		}
-
-		.custom-alert-overlay.show {
-			opacity: 1;
-			visibility: visible;
-		}
-
-		.custom-alert {
-			background-color: #f9f4ea;
-			border: 2px solid #8b4513;
-			border-radius: 8px;
-			padding: 30px 40px;
-			max-width: 350px;
-			width: 90%;
-			text-align: center;
-			box-shadow: 0 10px 30px rgba(139, 69, 19, 0.4);
-			transform: scale(0.8);
-			transition: transform 0.3s ease;
-		}
-
-		.custom-alert-overlay.show .custom-alert {
-			transform: scale(1);
-		}
-
-		.custom-alert-icon {
-			font-size: 48px;
-			margin-bottom: 15px;
-		}
-
-		.custom-alert-message {
-			font-size: 1.1em;
-			color: #5d3a1a;
-			margin-bottom: 20px;
-			line-height: 1.6;
-		}
-
-		.custom-alert-button {
-			background-color: #8b4513;
-			color: #fff;
-			border: none;
-			padding: 10px 30px;
-			font-size: 1em;
-			border-radius: 4px;
-			cursor: pointer;
-			font-family: 'LXGW WenKai', 'Georgia', serif;
-			transition: all 0.2s ease;
-		}
-
-		.custom-alert-button:hover {
-			background-color: #a0522d;
-			transform: translateY(-2px);
-		}
-
-		.custom-alert-button:active {
-			transform: translateY(0);
-		}
 	</style>
 
 </head>
@@ -150,6 +79,11 @@
 		<div class="zoom-icon zoom-icon-in"></div>
 		<div class="music-control" id="music-control">
 			<span class="music-icon music-play"></span>
+		</div>
+		<div class="zoom-controls" id="zoom-controls" style="display: none;">
+			<div class="zoom-label">缩放</div>
+			<input type="range" id="zoom-slider" min="1.5" step="0.1" value="1.5">
+			<div class="zoom-value" id="zoom-value">100%</div>
 		</div>
 
 		<div class="magazine-viewport">
@@ -186,7 +120,7 @@
 			initPDF('pages/magazine.pdf', function (pdf, error) {
 				if (error) {
 					console.error('PDF加载失败:', error);
-					alert('PDF加载失败，请检查文件路径');
+					showAlert('PDF加载失败，请检查文件路径');
 					return;
 				}
 				pdfDocument = pdf;
@@ -269,9 +203,7 @@
 
 			$('.magazine-viewport').zoom({
 				flipbook: $('.magazine'),
-				max: function () {
-					return largeMagazineWidth() / $('.magazine').width();
-				},
+				max: 2.4,
 				when: {
 					swipeLeft: function () {
 						$(this).zoom('flipbook').turn('next');
@@ -290,6 +222,7 @@
 						$('.made').hide();
 						$('.magazine').removeClass('animated').addClass('zoom-in');
 						$('.zoom-icon').removeClass('zoom-icon-in').addClass('zoom-icon-out');
+						$('.zoom-controls').show();
 
 						if (!window.escTip && !$.isTouch) {
 							escTip = true;
@@ -307,6 +240,7 @@
 						$('.thumbnails').fadeIn();
 						$('.made').fadeIn();
 						$('.zoom-icon').removeClass('zoom-icon-out').addClass('zoom-icon-in');
+						$('.zoom-controls').hide();
 
 						setTimeout(function () {
 							$('.magazine').addClass('animated').removeClass('zoom-in');
@@ -314,6 +248,10 @@
 						}, 0);
 					}
 				}
+			});
+
+			$('.magazine').bind('zooming', function (event, scale) {
+				updateZoomSlider(scale);
 			});
 
 			if ($.isTouch)
@@ -394,9 +332,22 @@
 
 				$('.thumbnails').bind('mousewheel DOMMouseScroll', function (e) {
 					var scrollDirection = e.originalEvent.wheelDelta || -e.originalEvent.detail;
-					var scrollDistance = scrollDirection > 0 ? -50 : 50;
-					$(this).find('div').animate({ scrollLeft: '+=' + scrollDistance }, 100);
+					var scrollDistance = scrollDirection > 0 ? -120 : 120;
+					var $container = $(this).find('div');
+					var currentScroll = $container.scrollLeft();
+					$container.scrollLeft(currentScroll + scrollDistance);
 					e.preventDefault();
+				});
+
+				var touchStartX = 0;
+				var touchStartScroll = 0;
+				$('.thumbnails').bind('touchstart', function (e) {
+					touchStartX = e.originalEvent.touches[0].clientX;
+					touchStartScroll = $(this).find('div').scrollLeft();
+				}).bind('touchmove', function (e) {
+					var touchCurrentX = e.originalEvent.touches[0].clientX;
+					var deltaX = touchStartX - touchCurrentX;
+					$(this).find('div').scrollLeft(touchStartScroll + deltaX);
 				});
 			}
 
@@ -432,6 +383,9 @@
 
 			resizeViewport();
 			$('.magazine').addClass('animated');
+
+			var maxZoom = largeMagazineWidth() / $('.magazine').width();
+			$('#zoom-slider').attr('max', maxZoom.toFixed(1));
 		}
 
 		$('.zoom-icon').bind('mouseover', function () {
@@ -450,6 +404,21 @@
 			else if ($(this).hasClass('zoom-icon-out'))
 				$('.magazine-viewport').zoom('zoomOut');
 		});
+
+		var zoomSlider = $('#zoom-slider');
+		var zoomValue = $('#zoom-value');
+
+		zoomSlider.on('input change', function () {
+			var scale = parseFloat($(this).val());
+			$('.magazine').turn('zoom', scale);
+			$('.magazine-viewport').zoom('resize');
+			zoomValue.text(Math.round(scale * 100) + '%');
+		});
+
+		function updateZoomSlider(scale) {
+			zoomSlider.val(scale);
+			zoomValue.text(Math.round(scale * 100) + '%');
+		}
 
 		var music = document.getElementById('background-music');
 		var musicControl = $('#music-control');
@@ -579,7 +548,7 @@
 			test: Modernizr.csstransforms,
 			yep: ['lib/turn.js'],
 			nope: ['lib/turn.html4.min.js'],
-			both: ['lib/zoom.min.js'],
+			both: ['lib/zoom.js'],
 			complete: function () {
 			}
 		});
