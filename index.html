@@ -569,9 +569,19 @@
 		if (isWeChatBrowser()) {
 			var wechatOverlay = $('<div class="wechat-overlay">');
 			var wechatContent = $('<div class="wechat-content">');
-			wechatContent.html('<div class="wechat-icon">📱</div><div class="wechat-title">请使用浏览器打开</div><div class="wechat-desc">本页面在微信内置浏览器中可能无法正常显示，请点击右上角选择"在浏览器中打开"</div>');
+			wechatContent.html('<div class="wechat-icon">📱</div><div class="wechat-title">请使用浏览器打开</div><div class="wechat-desc">本页面在微信内置浏览器中可能无法正常显示，请点击右上角选择"在浏览器中打开"</div><button class="wechat-button" id="wechat-button">强制访问</button>');
 			wechatOverlay.append(wechatContent);
 			$('body').append(wechatOverlay);
+
+			$('#wechat-button').click(function() {
+				$(this).text('我已知晓');
+				$('.wechat-title').text('提示');
+				$('.wechat-desc').text('如果出现显示问题，请尝试清理微信缓存，或直接用浏览器打开');
+				startPDFLoading();
+				$(this).click(function() {
+					$('.wechat-overlay').hide();
+				});
+			});
 		}
 
 		yepnope({

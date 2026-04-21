@@ -973,4 +973,27 @@ body {
 	color: #5d3a1a;
 	line-height: 1.6;
 	font-family: 'LXGW WenKai', 'Georgia', serif;
+	margin-bottom: 20px;
+}
+
+.wechat-button {
+	background-color: #8b4513;
+	color: #f9f4ea;
+	border: 2px solid #d3b88c;
+	border-radius: 8px;
+	padding: 12px 30px;
+	font-size: 16px;
+	font-family: 'LXGW WenKai', 'Georgia', serif;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.wechat-button:hover {
+	background-color: #a0522d;
+	transform: translateY(-2px);
+	box-shadow: 0 4px 10px rgba(139, 69, 19, 0.3);
+}
+
+.wechat-button:active {
+	transform: translateY(0);
 }
