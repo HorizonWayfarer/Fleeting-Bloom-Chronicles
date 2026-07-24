@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>刹那海棠 · 电子杂志</title>
+    <link rel="icon" href="data/favicon.ico">
+    <style>
+        /* ============================================================
+           1. 设计变量（海棠文艺风：米白纸底 + 海棠粉 + 棕墨字）
+           ============================================================ */
+        @font-face {
+            font-family: 'Dutch 801 Roman BT';
+            src: url('assets/fonts/Dutch 801 Roman BT.ttf') format('truetype');
+            font-weight: normal; font-style: normal;
+        }
+        @font-face {
+            font-family: 'LXGW WenKai Lite';
+            src: url('assets/fonts/LXGWWenKaiLite-Medium.woff2') format('woff2'),
+                 url('assets/fonts/LXGWWenKaiLite-Medium.ttf') format('truetype');
+            font-weight: 500; font-style: normal;
+        }
+
+        :root {
+            --paper:        #F7F1E8;  /* 暖米白纸底 */
+            --paper-page:   #FFFDF8;  /* 单页纸面 */
+            --paper-edge:   #EDE3D2;  /* 纸页边缘阴影 */
+            --hai-pink:     #D98BA0;  /* 海棠粉 */
+            --hai-pink-d:   #B85C7A;  /* 深海棠 */
+            --hai-pink-l:   #F2D4DC;  /* 浅海棠 */
+            --ink:          #4A3F35;  /* 棕墨字 */
+            --ink-soft:     #8A7A6A;  /* 次级文字 */
+            --gold:         #C9A86A;  /* 描金点缀 */
+            --line:         #E5D9C5;  /* 分隔线 */
+            --shadow:       rgba(74,63,53,0.18);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Dutch 801 Roman BT', 'LXGW WenKai Lite', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ============================================================
+           2. 加载页
+           ============================================================ */
+        #loading-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.8s ease;
+        }
+        #loading-screen::before {
+            content: ''; position: absolute; inset: -20px;
+            background: var(--loading-cover, url('data/cover.png')) center/cover no-repeat;
+            filter: blur(10px); transform: scale(1.1);
+        }
+        #loading-screen::after {
+            content: ''; position: absolute; inset: 0;
+            background: rgba(74,63,53,0.35);
+        }
+        #loading-screen.fade-out { opacity: 0; pointer-events: none; }
+
+        .load-card {
+            position: relative; z-index: 1;
+            width: min(420px, 86vw);
+            background: rgba(255,253,248,0.82);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(201,168,106,0.4);
+            border-radius: 18px;
+            padding: 38px 34px 32px;
+            text-align: center;
+            box-shadow: 0 18px 50px var(--shadow);
+        }
+        .load-card h1 {
+            font-family: 'Dutch 801 Roman BT', serif;
+            font-size: 26px; letter-spacing: 1px; color: var(--hai-pink-d);
+            line-height: 1.25; word-break: break-word; padding: 0 4px;
+        }
+        .load-card .sub { margin-top: 6px; font-size: 14px; color: var(--ink-soft); letter-spacing: 1px; }
+        .load-card .preface {
+            margin: 20px 0 24px; font-size: 14px; line-height: 1.9;
+            color: var(--ink); text-align: justify;
+        }
+        .progress-track {
+            height: 6px; border-radius: 4px; background: var(--line); overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--hai-pink), var(--hai-pink-d));
+            border-radius: 4px; transition: width 0.3s ease;
+        }
+        .progress-detail { margin-top: 10px; font-size: 13px; color: var(--ink-soft); }
+
+        .btn-open {
+            margin-top: 22px; width: 100%;
+            padding: 13px; border: none; border-radius: 12px;
+            font-family: 'LXGW WenKai Lite', sans-serif; font-size: 17px; letter-spacing: 6px;
+            background: var(--line); color: var(--ink-soft);
+            cursor: not-allowed; transition: all 0.4s ease;
+        }
+        .btn-open.ready {
+            background: linear-gradient(135deg, var(--hai-pink), var(--hai-pink-d));
+            color: #fff; cursor: pointer;
+            animation: breathe 2.2s ease-in-out infinite;
+        }
+        .btn-open.ready:hover { filter: brightness(1.06); }
+        @keyframes breathe {
+            0%,100% { box-shadow: 0 0 0 0 rgba(184,92,122,0.4); }
+            50%     { box-shadow: 0 0 0 12px rgba(184,92,122,0); }
+        }
+
+        /* ============================================================
+           3. 主界面布局
+           ============================================================ */
+        #app { display: none; flex-direction: column; height: 100vh; }
+        #app.show { display: flex; }
+
+        /* 顶部导航 */
+        .topbar {
+            flex: 0 0 auto; display: flex; align-items: center; gap: 16px;
+            padding: 12px 22px;
+            background: linear-gradient(180deg, var(--paper-page), var(--paper));
+            border-bottom: 1px solid var(--line);
+            z-index: 20;
+        }
+        .topbar .brand { display: flex; align-items: center; gap: 10px; }
+        .topbar .brand img { width: 34px; height: 34px; border-radius: 8px; }
+        .topbar .brand .t1 { font-family: 'Dutch 801 Roman BT', serif; font-size: 20px; color: var(--hai-pink-d); letter-spacing: 2px; }
+        .topbar .brand .t2 { font-size: 12px; color: var(--ink-soft); }
+        .topbar .page-ind {
+            margin-left: auto; font-size: 14px; color: var(--ink-soft);
+            font-family: 'Dutch 801 Roman BT', serif; letter-spacing: 1px;
+        }
+        .topbar .page-ind b { color: var(--hai-pink-d); font-size: 16px; }
+        .topbar .essay-name { font-size: 14px; color: var(--ink); max-width: 38vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .icon-btn {
+            width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line);
+            background: var(--paper-page); color: var(--ink); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 18px;
+            transition: all 0.2s;
+        }
+        .icon-btn:hover { background: var(--hai-pink-l); border-color: var(--hai-pink); }
+
+        /* 翻页区 */
+        .reader {
+            flex: 1 1 auto; position: relative; z-index: 1;
+            display: flex; align-items: center; justify-content: center;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(242,212,220,0.5), transparent 60%),
+                var(--paper);
+            overflow: hidden;
+        }
+        #flipbook { position: relative; }
+        #flipbook .page {
+            background: var(--paper-page);
+            overflow: hidden;
+            box-shadow: inset 0 0 30px rgba(74,63,53,0.04);
+        }
+        .page-inner {
+            position: relative; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .page-canvas-wrap { position: relative; line-height: 0; }
+        .page-canvas-wrap canvas { display: block; max-width: 100%; box-shadow: 0 4px 18px var(--shadow); }
+
+        .cover-img { width: 100%; height: 100%; object-fit: cover; }
+        .white-page { background: var(--paper-page); }
+
+        /* 叠加层热区（点击放大） */
+        .overlay-pin {
+            position: absolute; cursor: pointer;
+            border: 2px solid rgba(201,168,106,0.0);
+            border-radius: 4px; transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .overlay-pin::after {
+            content: attr(data-label);
+            position: absolute; top: 4px; right: 4px;
+            background: rgba(184,92,122,0.9); color: #fff;
+            font-size: 11px; padding: 1px 6px; border-radius: 8px;
+            opacity: 0; transform: translateY(-4px); transition: all 0.2s;
+            pointer-events: none; white-space: nowrap;
+        }
+        .overlay-pin:hover {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(201,168,106,0.35);
+        }
+        .overlay-pin:hover::after { opacity: 1; transform: translateY(0); }
+
+        /* 底部控制栏 */
+        .footer {
+            flex: 0 0 auto; display: flex; align-items: center; gap: 18px;
+            padding: 12px 22px;
+            background: linear-gradient(0deg, var(--paper-page), var(--paper));
+            border-top: 1px solid var(--line);
+        }
+        .music-ctrl { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; width: 280px; }
+        .music-ctrl .play {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--hai-pink); color: #fff; border: none; cursor: pointer; font-size: 16px;
+            display: flex; align-items: center; justify-content: center; transition: filter 0.2s;
+        }
+        .music-ctrl .play:hover { filter: brightness(1.08); }
+        .music-ctrl .meta { overflow: hidden; }
+        .music-ctrl .meta .song { font-size: 14px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .music-ctrl .meta .artist { font-size: 12px; color: var(--ink-soft); }
+
+        .lyrics {
+            flex: 1 1 auto; height: 44px; overflow: hidden; position: relative;
+            text-align: center;
+            -webkit-mask-image: linear-gradient(180deg, transparent, #000 35%, #000 65%, transparent);
+            mask-image: linear-gradient(180deg, transparent, #000 35%, #000 65%, transparent);
+        }
+        .lyrics .line {
+            font-size: 15px; line-height: 44px; color: var(--ink-soft);
+            transition: color 0.3s, transform 0.3s; white-space: nowrap;
+        }
+        .lyrics .line.active { color: var(--hai-pink-d); font-weight: 600; transform: scale(1.04); }
+
+        .nav-ctrl { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+        .nav-ctrl button {
+            width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line);
+            background: var(--paper-page); color: var(--ink); cursor: pointer; font-size: 16px;
+            transition: all 0.2s;
+        }
+        .nav-ctrl button:hover { background: var(--hai-pink-l); border-color: var(--hai-pink); }
+
+        /* 侧边栏（目录） */
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; width: 340px; z-index: 60;
+            background: var(--paper-page); border-right: 1px solid var(--line);
+            transform: translateX(-100%); transition: transform 0.35s ease;
+            display: flex; flex-direction: column;
+            box-shadow: 6px 0 30px var(--shadow);
+        }
+        .sidebar.open { transform: translateX(0); }
+        .sidebar .sb-head {
+            padding: 18px 20px; border-bottom: 1px solid var(--line);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .sidebar .sb-head h3 { font-family: 'Dutch 801 Roman BT', serif; color: var(--hai-pink-d); letter-spacing: 2px; }
+        .sidebar .sb-search { padding: 14px 20px; }
+        .sidebar .sb-search input {
+            width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+            background: var(--paper); color: var(--ink); font-family: inherit; font-size: 14px;
+        }
+        .sidebar .sb-list { flex: 1; overflow-y: auto; padding: 6px 12px 20px; }
+        .sb-item {
+            padding: 12px 14px; border-radius: 10px; cursor: pointer; margin-bottom: 4px;
+            display: flex; align-items: center; gap: 12px; transition: background 0.2s;
+        }
+        .sb-item:hover { background: var(--hai-pink-l); }
+        .sb-item .no { font-family: 'Dutch 801 Roman BT', serif; color: var(--hai-pink-d); font-size: 15px; flex: 0 0 auto; width: 26px; }
+        .sb-item .info .a { font-size: 15px; color: var(--ink); }
+        .sb-item .info .ti { font-size: 12px; color: var(--ink-soft); }
+        .sb-item .badge { margin-left: auto; font-size: 11px; color: var(--hai-pink-d); }
+
+        .scrim {
+            position: fixed; inset: 0; background: rgba(74,63,53,0.35);
+            opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 55;
+        }
+        .scrim.show { opacity: 1; pointer-events: auto; }
+
+        /* ============================================================
+           4. 模态框（图片放大 / 视频播放）
+           ============================================================ */
+        .modal {
+            position: fixed; inset: 0; z-index: 200; display: none;
+            align-items: center; justify-content: center;
+            background: rgba(40,34,28,0.9); padding: 40px;
+        }
+        .modal.show { display: flex; }
+        .modal img { max-width: 92vw; max-height: 88vh; border-radius: 10px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        .modal video { max-width: 92vw; max-height: 88vh; border-radius: 10px; background: #000; }
+        .modal .close {
+            position: absolute; top: 22px; right: 28px; width: 44px; height: 44px;
+            border-radius: 50%; border: none; background: rgba(255,255,255,0.15); color: #fff;
+            font-size: 22px; cursor: pointer;
+        }
+        .modal .close:hover { background: rgba(255,255,255,0.3); }
+
+        /* ============================================================
+           5. 响应式
+           ============================================================ */
+        @media (max-width: 768px) {
+            .topbar .essay-name { display: none; }
+            .lyrics { display: none; }
+            .music-ctrl { width: auto; }
+            .music-ctrl .meta { display: none; }
+            .sidebar { width: 84vw; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===================== 加载页 ===================== -->
+    <div id="loading-screen">
+        <div class="load-card">
+            <h1>Fleeting Bloom Chronicles</h1>
+            <div class="sub">天津市钢管公司中学 · 高三五班</div>
+            <p class="preface">一树海棠，三载青春。<br>我们把十七岁的故事，写进这册薄薄的电子杂志，愿你在某一页，遇见曾经的自己。</p>
+            <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+            <div class="progress-detail" id="progress-detail">正在准备书籍…</div>
+            <button class="btn-open" id="btn-open" disabled>翻 开</button>
+        </div>
+    </div>
+
+    <!-- ===================== 主界面 ===================== -->
+    <div id="app">
+        <!-- 顶部导航 -->
+        <div class="topbar">
+            <div class="brand">
+                <img src="data/logo.png" alt="logo">
+                <div>
+                    <div class="t1">刹那海棠</div>
+                    <div class="t2">电子杂志 · 高三五班</div>
+                </div>
+            </div>
+            <div class="essay-name" id="essay-name"></div>
+            <div class="page-ind">第 <b id="page-cur">1</b> / <span id="page-total">1</span> 页</div>
+            <button class="icon-btn" id="btn-toc" title="目录">☰</button>
+            <button class="icon-btn" id="btn-comment" title="留言">✎</button>
+        </div>
+
+        <!-- 翻页区 -->
+        <div class="reader">
+            <div id="flipbook"></div>
+        </div>
+
+        <!-- 底部控制栏 -->
+        <div class="footer">
+            <div class="music-ctrl">
+                <button class="play" id="btn-play" title="播放/暂停">▶</button>
+                <div class="meta">
+                    <div class="song" id="song-name">Wild - All My Life</div>
+                    <div class="artist">背景音乐</div>
+                </div>
+            </div>
+            <div class="lyrics" id="lyrics"></div>
+            <div class="nav-ctrl">
+                <button id="btn-prev" title="上一页">‹</button>
+                <button id="btn-next" title="下一页">›</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 侧边栏：目录 -->
+    <div class="scrim" id="scrim"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sb-head">
+            <h3>目录</h3>
+            <button class="icon-btn" id="btn-toc-close" title="关闭">✕</button>
+        </div>
+        <div class="sb-search"><input type="text" id="toc-search" placeholder="搜索作者或标题…"></div>
+        <div class="sb-list" id="toc-list"></div>
+    </div>
+
+    <!-- 模态框 -->
+    <div class="modal" id="img-modal">
+        <button class="close" data-close>✕</button>
+        <img id="img-modal-src" src="" alt="预览">
+    </div>
+    <div class="modal" id="video-modal">
+        <button class="close" data-close>✕</button>
+        <video id="video-modal-src" controls playsinline></video>
+    </div>
+
+    <!-- ===================== 依赖脚本（先加载） ===================== -->
+    <script src="js/lib/jQuery/jquery.min.js"></script>
+    <script src="js/lib/turnjs4/lib/turn.min.js"></script>
+
+    <!-- ===================== 主逻辑（ESM 模块） ===================== -->
+    <script type="module">
+        import * as pdfjsLib from './js/lib/pdf.js/pdf.mjs';
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+            new URL('./js/lib/pdf.js/pdf.worker.mjs', import.meta.url).href;
+
+        /* ---------------------- 全局状态 ---------------------- */
+        const state = {
+            data: null,
+            flipPages: [],
+            pageRefs: new Map(),
+            pdfCache: new Map(),
+            essayPdfCount: new Map(),
+            mediaFirstFlip: [],
+            rendered: new Set(),
+            total: 1,
+            essayCount: 0,
+            lrc: [],
+            musicOn: false,
+        };
+
+        /* 稳健解析资源路径：相对“应用所在目录”而非文档地址，
+           避免以 http://host/app（无尾斜杠）方式打开时相对路径错位导致 404 */
+        function resolveAsset(p) {
+            if (!p) return p;
+            if (/^[a-z]+:\/\//i.test(p) || p.startsWith('//')) return p; // 已是绝对地址
+            // 计算“应用所在目录”（始终以 / 结尾），避免无尾斜杠时相对路径错位
+            const base = location.origin + location.pathname
+                .replace(/index\.html$/, '')
+                .replace(/([^/])$/, '$1/');
+            return new URL(p, base).href;
+        }
+
+        // 兜底：修正静态 HTML / CSS 中的相对资源（logo、加载页背景）
+        (function fixStaticAssets() {
+            const logo = document.querySelector('img[src="data/logo.png"]');
+            if (logo) logo.src = resolveAsset('data/logo.png');
+            document.documentElement.style.setProperty('--loading-cover', 'url("' + resolveAsset('data/cover.png') + '")');
+        })();
+
+        const OPS = pdfjsLib.OPS;
+
+        /* ============================================================
+           模块 A：数据加载 + PDF 预加载
+           ============================================================ */
+        async function loadData() {
+            // 加时间戳避免浏览器缓存旧版 JSON（旧版缺 pdf/media 字段会导致整页崩溃）
+            const res = await fetch(resolveAsset('data/pages-map.json') + '?v=' + Date.now());
+            if (!res.ok) throw new Error('书目加载失败：HTTP ' + res.status);
+            state.data = await res.json();
+            if (!state.data || !Array.isArray(state.data.pages)) {
+                throw new Error('书目数据格式异常：pages 缺失');
+            }
+            state.essayCount = state.data.pages.length;
+        }
+
+        function buildFlipPlan() {
+            const plan = [];
+            plan.push({ type: 'cover', src: resolveAsset(state.data.cover) });
+            plan.push({ type: 'white' });
+
+            state.data.pages.forEach((essay, ei) => {
+                state.mediaFirstFlip[ei] = plan.length;
+                const pdfInfo = state.essayPdfCount.get(essay.pdf) || 1;
+                for (let pi = 0; pi < pdfInfo; pi++) {
+                    plan.push({
+                        type: 'essay',
+                        essayIdx: ei,
+                        pdfPageIndex: pi,
+                        // 只挂“属于本页”的媒体：每个 media 的 page 字段记着它来自 PDF 第几页(1based)
+                        media: (essay.media || []).filter(m => (m.page || 1) === pi + 1),
+                    });
+                }
+            });
+
+            plan.push({ type: 'white' });
+            plan.push({ type: 'back', src: resolveAsset(state.data.backCover) });
+
+            state.flipPages = plan;
+            state.total = plan.length;
+        }
+
+        async function preloadPdfs(onProgress) {
+            const essays = state.data.pages;
+            let done = 0;
+            await Promise.all(essays.map(async (essay) => {
+                if (!essay || !essay.pdf) {
+                    console.warn('跳过缺 pdf 字段的文章：', essay && (essay.author || essay.title));
+                    state.essayPdfCount.set(essay && essay.title || 'unknown', 1);
+                    done++;
+                    onProgress(done, essays.length);
+                    return;
+                }
+                try {
+                    const doc = await pdfjsLib.getDocument(resolveAsset(essay.pdf)).promise;
+                    state.pdfCache.set(essay.pdf, doc);
+                    state.essayPdfCount.set(essay.pdf, doc.numPages);
+                } catch (e) {
+                    console.error('PDF 加载失败:', essay.pdf, e);
+                    state.essayPdfCount.set(essay.pdf, 1);
+                }
+                done++;
+                onProgress(done, essays.length);
+            }));
+        }
+
+        /* ============================================================
+           模块 B：构建 DOM + 翻页初始化（pageRefs 关键点）
+           ============================================================ */
+        function buildPages() {
+            const fb = document.getElementById('flipbook');
+            fb.innerHTML = '';
+
+            state.flipPages.forEach((p, idx) => {
+                const div = document.createElement('div');
+                div.className = 'page';
+                div.dataset.flip = idx;
+
+                const inner = document.createElement('div');
+                inner.className = 'page-inner';
+
+                if (p.type === 'cover' || p.type === 'back') {
+                    const img = document.createElement('img');
+                    img.className = 'cover-img';
+                    img.src = p.src;
+                    inner.appendChild(img);
+                } else if (p.type === 'white') {
+                    div.classList.add('white-page');
+                } else if (p.type === 'essay') {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'page-canvas-wrap';
+                    const canvas = document.createElement('canvas');
+                    wrap.appendChild(canvas);
+                    inner.appendChild(wrap);
+                }
+
+                div.appendChild(inner);
+                fb.appendChild(div);
+                state.pageRefs.set(idx, div);
+            });
+        }
+
+        function computeSize() {
+            const w = window.innerWidth;
+            if (w < 768) {
+                const pw = Math.min(w - 24, 420);
+                return { pageW: pw, pageH: Math.round(pw * 1.4), display: 'single' };
+            }
+            const pw = Math.min(Math.floor((w - 80) / 2), 520);
+            return { pageW: pw, pageH: Math.round(pw * 1.385), display: 'double' };
+        }
+
+        function initTurnJs() {
+            const { pageW, pageH, display } = computeSize();
+            $('#flipbook').turn({
+                width: pageW * (display === 'double' ? 2 : 1),
+                height: pageH,
+                display: display,
+                elevation: 28,
+                grad: true,
+                autoCenter: true,
+                pages: state.total,
+                when: {
+                    turning: function (e, page) { renderAround(page); },
+                    turned: function (e, page) { updatePageInfo(page); },
+                },
+            });
+            document.getElementById('page-total').textContent = state.total;
+        }
+
+        /* ============================================================
+           模块 C：PDF 渲染 + 图片位置检测（叠加层核心）
+           ============================================================ */
+        async function renderEssayPage(idx) {
+            if (state.rendered.has(idx)) return;
+            const p = state.flipPages[idx];
+            if (!p || p.type !== 'essay') return;
+
+            const div = state.pageRefs.get(idx);
+            const wrap = div.querySelector('.page-canvas-wrap');
+            const canvas = wrap.querySelector('canvas');
+            const essay = state.data.pages[p.essayIdx];
+            const doc = state.pdfCache.get(essay.pdf);
+            if (!doc) return;
+
+            const page = await doc.getPage(p.pdfPageIndex + 1);
+            const { pageW, pageH } = computeSize();
+            const vp0 = page.getViewport({ scale: 1 });
+            const scale = Math.min(pageW / vp0.width, pageH / vp0.height);
+            const viewport = page.getViewport({ scale }); // CSS 像素视口（overlay 定位用）
+
+            // 适配高 DPI 屏幕（手机 / Retina），按设备像素比放大渲染，避免模糊
+            const dpr = Math.min(window.devicePixelRatio || 1, 3);
+            const renderViewport = page.getViewport({ scale: scale * dpr });
+
+            canvas.width = Math.round(renderViewport.width);
+            canvas.height = Math.round(renderViewport.height);
+            canvas.style.width = Math.round(viewport.width) + 'px';
+            canvas.style.height = Math.round(viewport.height) + 'px';
+            wrap.style.width = Math.round(viewport.width) + 'px';
+            wrap.style.height = Math.round(viewport.height) + 'px';
+
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport: renderViewport }).promise;
+
+            await placeOverlays(page, viewport, wrap, div, p.media, p.essayIdx, scale);
+
+            state.rendered.add(idx);
+        }
+
+        function multM(m1, m2) {
+            return [
+                m1[0]*m2[0] + m1[2]*m2[1],
+                m1[1]*m2[0] + m1[3]*m2[1],
+                m1[0]*m2[2] + m1[2]*m2[3],
+                m1[1]*m2[2] + m1[3]*m2[3],
+                m1[0]*m2[4] + m1[2]*m2[5] + m1[4],
+                m1[1]*m2[4] + m1[3]*m2[5] + m1[5],
+            ];
+        }
+        function applyM(m, x, y) { return [m[0]*x + m[2]*y + m[4], m[1]*x + m[3]*y + m[5]]; }
+
+        async function detectImageRegions(page, viewport) {
+            const opList = await page.getOperatorList();
+            const vt = viewport.transform;
+            let ctm = [1,0,0,1,0,0];
+            const regions = [];
+
+            for (let i = 0; i < opList.fnArray.length; i++) {
+                const op = opList.fnArray[i];
+                const args = opList.argsArray[i];
+                if (op === OPS.transform) {
+                    ctm = multM(ctm, args);
+                } else if (op === OPS.setTransformationMatrix) {
+                    ctm = args.slice();
+                } else if (op === OPS.paintImageXObject || op === OPS.paintImageXObjectRepeat) {
+                    const corners = [[0,0],[1,0],[0,1],[1,1]].map(pt => {
+                        const u = applyM(ctm, pt[0], pt[1]);
+                        return applyM(vt, u[0], u[1]);
+                    });
+                    const xs = corners.map(c => c[0]), ys = corners.map(c => c[1]);
+                    const x = Math.min(...xs), y = Math.min(...ys);
+                    const w = Math.max(...xs) - x, h = Math.max(...ys) - y;
+                    if (w > 8 && h > 8) regions.push({ x, y, w, h });
+                }
+            }
+            return regions;
+        }
+
+        async function placeOverlays(page, viewport, wrap, div, media, essayIdx, scale) {
+            if (!media || media.length === 0) return;
+            // 本页自带的媒体（已在 buildFlipPlan 按 page 过滤），不再跨页共享
+            // noZoom=true 的图片（如整页背景图）只渲染不生成放大热区
+            const images = media.filter(m => m.type !== 'video' && !m.noZoom);
+            const videos = media.filter(m => m.type === 'video');
+
+            // operator-list 检测仅作兜底（无 bbox 的图片 / 视频）
+            let detRegions = [];
+            try { detRegions = await detectImageRegions(page, viewport); } catch (e) { detRegions = []; }
+            detRegions.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+
+            let ri = 0, fi = 0;
+            const fallback = (k) => ({ x: 10 + (k % 14) * 46, y: 10 + Math.floor(k / 14) * 46, w: 42, h: 42 });
+            const pin = (m, r, label, text) =>
+                wrap.appendChild(makePin(label, m.file, text, r.x, r.y, r.w, r.h));
+
+            // 图片：优先用 PDF 里提取出的精确 bbox 定位（地面真相，绝不漏检/错位）
+            images.forEach((m) => {
+                let r;
+                if (m.bbox && m.bbox.length === 4) {
+                    const [x0, y0, x1, y1] = m.bbox; // PyMuPDF：左上原点、y向下、单位 pt
+                    r = { x: scale * x0, y: scale * y0, w: scale * (x1 - x0), h: scale * (y1 - y0) };
+                } else if (ri < detRegions.length) {
+                    r = detRegions[ri++];
+                } else {
+                    r = fallback(fi++);
+                }
+                pin(m, r, '📷', '图片');
+            });
+            // 视频：用检测区域或角落兜底
+            videos.forEach((m) => {
+                const r = (ri < detRegions.length) ? detRegions[ri++] : fallback(fi++);
+                pin(m, r, '🎬', '视频');
+            });
+        }
+
+        function makePin(label, file, text, x, y, w, h) {
+            const pin = document.createElement('div');
+            pin.className = 'overlay-pin';
+            pin.dataset.label = text;
+            pin.style.left = x + 'px';
+            pin.style.top = y + 'px';
+            pin.style.width = w + 'px';
+            pin.style.height = h + 'px';
+            pin.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openMedia({ type: file.endsWith('.mp4') ? 'video' : 'image', file });
+            });
+            return pin;
+        }
+
+        async function renderAround(page) {
+            const idx = page - 1;
+            const targets = [idx];
+            if (idx + 1 < state.total) targets.push(idx + 1);
+            if (idx - 1 >= 0) targets.push(idx - 1);
+            for (const t of targets) {
+                if (!state.rendered.has(t)) await renderEssayPage(t);
+            }
+        }
+
+        /* ============================================================
+           模块 D：模态框（图片 / 视频）
+           ============================================================ */
+        let lastVol = 1;
+        function openMedia(m) {
+            if (m.type === 'video') {
+                const v = document.getElementById('video-modal-src');
+                v.src = resolveAsset(m.file);
+                document.getElementById('video-modal').classList.add('show');
+                v.play();
+                pauseMusic();
+            } else {
+                const img = document.getElementById('img-modal-src');
+                img.onerror = () => { img.alt = '图片加载失败：' + m.file; };
+                img.alt = '预览';
+                img.src = resolveAsset(m.file);
+                document.getElementById('img-modal').classList.add('show');
+                lowerMusic();
+            }
+        }
+        function closeModals() {
+            document.getElementById('img-modal').classList.remove('show');
+            document.getElementById('video-modal').classList.remove('show');
+            const v = document.getElementById('video-modal-src');
+            v.pause(); v.src = '';
+            restoreMusic();
+        }
+        document.querySelectorAll('.modal').forEach(md => {
+            md.addEventListener('click', (e) => { if (e.target === md || e.target.hasAttribute('data-close')) closeModals(); });
+        });
+
+        function lowerMusic() { const a = document.getElementById('bgm'); if (a) { lastVol = a.volume; a.volume = 0.25; } }
+        function restoreMusic() { const a = document.getElementById('bgm'); if (a) a.volume = lastVol; }
+
+        /* ============================================================
+           模块 E：音乐 + 歌词
+           ============================================================ */
+        async function loadLyrics() {
+            try {
+                const res = await fetch(resolveAsset(state.data.lrc) + '?v=' + Date.now());
+                const text = await res.text();
+                state.lrc = parseLRC(text);
+            } catch (e) { state.lrc = []; }
+        }
+        function parseLRC(text) {
+            const re = /\[(\d{2}):(\d{2})(?:[.:](\d{1,3}))?\]/g;
+            const out = [];
+            text.split('\n').forEach(line => {
+                const tags = [...line.matchAll(re)];
+                if (!tags.length) return;
+                const txt = line.replace(re, '').trim();
+                tags.forEach(t => {
+                    const mm = +t[1], ss = +t[2];
+                    const ms = t[3] ? +t[3].padEnd(3, '0') : 0;
+                    out.push({ time: mm * 60 + ss + ms / 1000, text: txt });
+                });
+            });
+            out.sort((a, b) => a.time - b.time);
+            const seen = new Map();
+            out.forEach(o => seen.set(o.time, o));
+            return [...seen.values()];
+        }
+
+        let bgm;
+        function setupMusic() {
+            bgm = new Audio(resolveAsset(state.data.music));
+            bgm.loop = true;
+            bgm.volume = 1;
+            bgm.id = 'bgm';
+            document.body.appendChild(bgm);
+
+            bgm.addEventListener('timeupdate', () => {
+                const t = bgm.currentTime;
+                let cur = -1;
+                for (let i = 0; i < state.lrc.length; i++) {
+                    if (state.lrc[i].time <= t) cur = i; else break;
+                }
+                highlightLyric(cur);
+            });
+        }
+        function highlightLyric(idx) {
+            const box = document.getElementById('lyrics');
+            if (idx < 0 || idx >= state.lrc.length) return;
+            box.innerHTML = '<div class="line active">' + state.lrc[idx].text + '</div>';
+        }
+        function playMusic() { bgm.play(); state.musicOn = true; document.getElementById('btn-play').textContent = '❚❚'; }
+        function pauseMusic() { if (bgm && !bgm.paused) { bgm.pause(); document.getElementById('btn-play').textContent = '▶'; } }
+        function toggleMusic() { if (!bgm) return; if (bgm.paused) playMusic(); else pauseMusic(); }
+
+        /* ============================================================
+           模块 F：目录侧边栏 + 翻页控制
+           ============================================================ */
+        function buildToc() {
+            const list = document.getElementById('toc-list');
+            list.innerHTML = '';
+            state.data.pages.forEach((essay, ei) => {
+                const item = document.createElement('div');
+                item.className = 'sb-item';
+                const hasMedia = (essay.media || []).length > 0;
+                item.innerHTML =
+                    '<div class="no">' + String(ei + 1).padStart(2, '0') + '</div>' +
+                    '<div class="info"><div class="a">' + essay.author + '</div>' +
+                    '<div class="ti">《' + essay.title + '》</div></div>' +
+                    (hasMedia ? '<div class="badge">📎' + essay.media.length + '</div>' : '');
+                item.addEventListener('click', () => {
+                    const flip = state.mediaFirstFlip[ei] + 1;
+                    $('#flipbook').turn('page', flip);
+                    closeSidebar();
+                });
+                list.appendChild(item);
+            });
+        }
+        function filterToc(q) {
+            q = q.trim().toLowerCase();
+            document.querySelectorAll('#toc-list .sb-item').forEach((el, i) => {
+                const essay = state.data.pages[i];
+                const hay = (essay.author + essay.title).toLowerCase();
+                el.style.display = hay.includes(q) ? '' : 'none';
+            });
+        }
+        function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('scrim').classList.add('show'); }
+        function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('scrim').classList.remove('show'); }
+
+        function updatePageInfo(page) {
+            document.getElementById('page-cur').textContent = page;
+            const idx = page - 1;
+            const p = state.flipPages[idx];
+            const nameEl = document.getElementById('essay-name');
+            if (p && p.type === 'essay') {
+                const essay = state.data.pages[p.essayIdx];
+                nameEl.textContent = essay.author + ' · 《' + essay.title + '》';
+            } else if (p && p.type === 'cover') {
+                nameEl.textContent = '封面';
+            } else if (p && p.type === 'back') {
+                nameEl.textContent = '封底';
+            } else {
+                nameEl.textContent = '';
+            }
+        }
+
+        /* ============================================================
+           模块 G：启动流程
+           ============================================================ */
+        async function init() {
+            const fill = document.getElementById('progress-fill');
+            const detail = document.getElementById('progress-detail');
+
+            detail.textContent = '读取书目…';
+            await loadData();
+            await loadLyrics();
+
+            detail.textContent = '载入文章中…';
+            await preloadPdfs((d, t) => {
+                fill.style.width = (d / t * 60) + '%';
+                detail.textContent = '正在载入 PDF ' + d + ' / ' + t;
+            });
+
+            buildFlipPlan();
+
+            detail.textContent = '构建书页…';
+            buildPages();
+            fill.style.width = '70%';
+
+            detail.textContent = '初始化翻页…';
+            initTurnJs();
+            fill.style.width = '85%';
+
+            detail.textContent = '渲染首屏…';
+            await renderAround(1);
+            fill.style.width = '100%';
+
+            buildToc();
+            setupMusic();
+            updatePageInfo(1);
+
+            detail.textContent = '准备就绪，点击翻开';
+            const btn = document.getElementById('btn-open');
+            btn.disabled = false;
+            btn.classList.add('ready');
+
+            btn.addEventListener('click', () => {
+                document.getElementById('loading-screen').classList.add('fade-out');
+                document.getElementById('app').classList.add('show');
+                playMusic();
+                setTimeout(() => renderAround($('#flipbook').turn('page')), 300);
+            });
+        }
+
+        /* ---------------------- 事件绑定 ---------------------- */
+        document.getElementById('btn-play').addEventListener('click', toggleMusic);
+        document.getElementById('btn-prev').addEventListener('click', () => $('#flipbook').turn('previous'));
+        document.getElementById('btn-next').addEventListener('click', () => $('#flipbook').turn('next'));
+        document.getElementById('btn-toc').addEventListener('click', openSidebar);
+        document.getElementById('btn-toc-close').addEventListener('click', closeSidebar);
+        document.getElementById('scrim').addEventListener('click', closeSidebar);
+        document.getElementById('toc-search').addEventListener('input', (e) => filterToc(e.target.value));
+        document.getElementById('btn-comment').addEventListener('click', () => alert('留言板开发中，敬请期待 🌸'));
+
+        document.addEventListener('keydown', (e) => {
+            if (!document.getElementById('app').classList.contains('show')) return;
+            // 输入框内不拦截（让用户输入空格）
+            const tag = (e.target && e.target.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea') return;
+            if (e.code === 'Space') {
+                // 图片/视频弹窗打开时不切换音乐，且阻止页面滚动与按钮原生激活
+                if (document.querySelector('.modal.show')) return;
+                e.preventDefault();
+                toggleMusic();
+            } else if (e.key === 'ArrowLeft') {
+                $('#flipbook').turn('previous');
+            } else if (e.key === 'ArrowRight') {
+                $('#flipbook').turn('next');
+            }
+        });
+        let rzTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(rzTimer);
+            rzTimer = setTimeout(() => {
+                if (!$('#flipbook').data('turn')) return;
+                const { pageW, pageH, display } = computeSize();
+                $('#flipbook').turn('size', pageW * (display === 'double' ? 2 : 1), pageH);
+                if (display) $('#flipbook').turn('display', display);
+            }, 250);
+        });
+
+        init().catch(err => {
+            console.error(err);
+            document.getElementById('progress-detail').textContent = '加载出错，请看控制台';
+        });
+    </script>
+</body>
+</html>
