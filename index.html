@@ -56,7 +56,7 @@
         }
         #loading-screen::before {
             content: ''; position: absolute; inset: -20px;
-            background: var(--loading-cover, url('data/cover.png')) center/cover no-repeat;
+            background: var(--loading-cover, url('data/cover.png?v=20260724')) center/cover no-repeat;
             filter: blur(10px); transform: scale(1.1);
         }
         #loading-screen::after {
@@ -314,7 +314,7 @@
         <!-- 顶部导航 -->
         <div class="topbar">
             <div class="brand">
-                <img src="data/logo.png" alt="logo">
+                <img src="data/logo.png?v=20260724" alt="logo">
                 <div>
                     <div class="t1">刹那海棠</div>
                     <div class="t2">电子杂志 · 高三五班</div>
@@ -408,9 +408,9 @@
 
         // 兜底：修正静态 HTML / CSS 中的相对资源（logo、加载页背景）
         (function fixStaticAssets() {
-            const logo = document.querySelector('img[src="data/logo.png"]');
-            if (logo) logo.src = resolveAsset('data/logo.png');
-            document.documentElement.style.setProperty('--loading-cover', 'url("' + resolveAsset('data/cover.png') + '")');
+            const logo = document.querySelector('img[src^="data/logo.png"]');
+            if (logo) logo.src = resolveAsset('data/logo.png') + '?v=20260724';
+            document.documentElement.style.setProperty('--loading-cover', 'url("' + resolveAsset('data/cover.png') + '?v=20260724")');
         })();
 
         const OPS = pdfjsLib.OPS;
@@ -431,7 +431,7 @@
 
         function buildFlipPlan() {
             const plan = [];
-            plan.push({ type: 'cover', src: resolveAsset(state.data.cover) });
+            plan.push({ type: 'cover', src: resolveAsset(state.data.cover) + '?v=20260724' });
             plan.push({ type: 'white' });
 
             state.data.pages.forEach((essay, ei) => {
@@ -449,7 +449,7 @@
             });
 
             plan.push({ type: 'white' });
-            plan.push({ type: 'back', src: resolveAsset(state.data.backCover) });
+            plan.push({ type: 'back', src: resolveAsset(state.data.backCover) + '?v=20260724' });
 
             state.flipPages = plan;
             state.total = plan.length;
