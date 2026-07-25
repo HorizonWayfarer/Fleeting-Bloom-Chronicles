@@ -239,11 +239,12 @@
             box-shadow: 6px 0 30px var(--shadow);
         }
         .sidebar.open { transform: translateX(0); }
-        .sidebar .sb-head {
+        .sb-head {
             padding: 18px 20px; border-bottom: 1px solid var(--line);
             display: flex; align-items: center; justify-content: space-between;
         }
-        .sidebar .sb-head h3 { font-family: 'Dutch 801 Roman BT', serif; color: var(--hai-pink-d); letter-spacing: 2px; }
+        .sidebar .sb-head h3,
+        .cpanel .sb-head h3 { font-family: 'Dutch 801 Roman BT', serif; color: var(--hai-pink-d); letter-spacing: 2px; }
         .sidebar .sb-search { padding: 14px 20px; }
         .sidebar .sb-search input {
             width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
@@ -277,7 +278,6 @@
             box-shadow: -6px 0 30px var(--shadow);
         }
         .cpanel.open { transform: translateX(0); }
-        .cpanel .sb-head h3 { font-family: 'Dutch 801 Roman BT', serif; color: var(--hai-pink-d); letter-spacing: 2px; }
 
         .cform { padding: 16px 20px; border-bottom: 1px solid var(--line); }
         .cf-label { display: block; font-size: 13px; color: var(--ink-soft); margin: 12px 0 6px; }
@@ -978,11 +978,11 @@
            模块 H：留言板（作品下拉 + 姓名下拉 + 点赞）
            ============================================================ */
         const ROSTER = [
-            '王予凡','张同泽','范柏唱','郭永尚','杨博文','王禹涵','柴鼎旭','张心茹','闫奥若','谢承睿',
-            '刘庆豪','黄蕊','王甲慧','李晓婧','张成林','孙博瑞','胡美萱','刘志航','李承阳','张有强',
-            '贯梓悦','刘博涵','王艺诺','刘宇轩','孙学峰','韩依晨','王绪颖','郭洪妍','黄伟超','陈秋雯',
-            '吕筱雯','冯羽童','张长鑫','刘泽田','彭岑','王玉山','赵潞祎','杨学昊','窦予男','李富雨',
-            '魏雨润','刘芮扬','刘亦晗','孙明妍','李语嫣','张斯博'
+            '王予凡','张同泽','郭永尚','柴鼎旭','谢承睿','王禹涵','刘庆豪','刘志航','刘宇轩','孙学峰',
+            '刘泽田','李承阳','张成林','孙博瑞','杨博文','冯羽童','张心茹','李晓婧','刘博涵','李富雨',
+            '王玉山','杨学昊','窦予男','范柏唱','黄伟超','胡美萱','张有强','彭岑','陈秋雯','赵潞祎',
+            '闫奥若','黄蕊','张长鑫','王艺诺','郭洪妍','王绪颖','吕筱雯','魏雨润','刘芮扬','刘亦晗',
+            '贯梓悦','韩依晨','王甲慧','孙明妍','李语嫣','张斯博'
         ];
         const COMMENT_API = '/api/comments';
         const LIKE_API = '/api/like';
