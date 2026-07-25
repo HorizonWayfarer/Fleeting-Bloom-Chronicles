@@ -296,6 +296,24 @@
         .cf-submit:disabled { opacity: .5; cursor: default; }
         .cf-hint { font-size: 11px; color: var(--ink-soft); margin-top: 6px; line-height: 1.4; }
 
+        .essay-like {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 14px; margin-top: 10px; border-radius: 14px;
+            background: var(--hai-pink-l); border: 1px solid var(--line);
+        }
+        .elike-btn {
+            width: 44px; height: 44px; flex: none; border-radius: 50%; border: none;
+            background: #fff; cursor: pointer; font-size: 20px; line-height: 1;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,.08); transition: transform .15s, background .2s;
+        }
+        .elike-btn:active { transform: scale(.88); }
+        .elike-btn.liked { background: var(--hai-pink); }
+        .elike-info { display: flex; flex-direction: column; gap: 2px; }
+        .elike-label { font-size: 14px; color: var(--hai-pink-d); font-weight: 600; }
+        .elike-count { font-size: 12px; color: var(--ink-soft); }
+        .elike-count b { color: var(--hai-pink-d); }
+
         .cmt-list { flex: 1; overflow-y: auto; padding: 12px 16px 28px; }
         .cmt-item {
             padding: 12px 14px; border-radius: 12px; background: var(--paper);
@@ -314,6 +332,17 @@
         .cmt-empty, .cmt-err { text-align: center; padding: 30px 12px; font-size: 14px; }
         .cmt-empty { color: var(--ink-soft); }
         .cmt-err { color: var(--hai-pink-d); }
+        .cmt-tabs { display: flex; gap: 6px; padding: 10px 16px 4px; }
+        .cmt-tab {
+            flex: 1; padding: 8px 0; border: 1px solid var(--line); background: transparent;
+            border-radius: 20px; cursor: pointer; font-family: inherit; font-size: 13px;
+            color: var(--ink-soft); transition: all .2s;
+        }
+        .cmt-tab.active { background: var(--hai-pink); border-color: var(--hai-pink); color: #fff; }
+        .cmt-essay-tag {
+            display: inline-block; font-size: 11px; color: var(--hai-pink-d);
+            background: var(--hai-pink-l); border-radius: 6px; padding: 1px 7px; margin-bottom: 6px;
+        }
         @media (max-width: 768px) { .cpanel { width: 90vw; } }
 
         /* ============================================================
@@ -446,6 +475,14 @@
             <label class="cf-label" for="cmt-essay">评论作品</label>
             <select id="cmt-essay" class="cf-select"></select>
 
+            <div class="essay-like" id="essay-like">
+                <button type="button" class="elike-btn" id="elike-btn" aria-label="为这篇作品点赞">🤍</button>
+                <div class="elike-info">
+                    <div class="elike-label">为这篇作品点赞</div>
+                    <div class="elike-count"><b id="elike-count">0</b> 人觉得这篇很赞</div>
+                </div>
+            </div>
+
             <label class="cf-label" for="cmt-name">你的名字</label>
             <select id="cmt-name" class="cf-select"></select>
             <input type="text" id="cmt-custom" class="cf-input" placeholder="输入自定义名字" style="display:none; margin-top:8px;">
@@ -457,6 +494,10 @@
                 <button id="cmt-submit" class="cf-submit">发送留言</button>
             </div>
             <div class="cf-hint">留言存储于 Cloudflare D1，默认以“访客”身份发布；选择班级姓名或自定义名字更有纪念意义 🌸</div>
+        </div>
+        <div class="cmt-tabs">
+            <button type="button" class="cmt-tab active" data-tab="essay">本篇留言</button>
+            <button type="button" class="cmt-tab" data-tab="all">全部留言</button>
         </div>
         <div class="cmt-list" id="cmt-list"></div>
     </div>
@@ -986,11 +1027,13 @@
         ];
         const COMMENT_API = '/api/comments';
         const LIKE_API = '/api/like';
+        const ESSAY_LIKE_API = '/api/essay-like';
         const UID = (() => {
             let u = localStorage.getItem('fbc_uid');
             if (!u) { u = 'u_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); localStorage.setItem('fbc_uid', u); }
             return u;
         })();
+        let commentTab = 'essay';
 
         function buildCommentForm() {
             const selE = document.getElementById('cmt-essay');
@@ -1032,6 +1075,7 @@
             document.getElementById('cpanel').classList.add('open');
             document.getElementById('scrim').classList.add('show');
             loadComments();
+            loadEssayLike();
         }
         function closeComment() {
             document.getElementById('cpanel').classList.remove('open');
@@ -1052,10 +1096,14 @@
 
         async function loadComments() {
             const list = document.getElementById('cmt-list');
-            const essayId = document.getElementById('cmt-essay').value;
             list.innerHTML = '<div class="cmt-empty">加载中…</div>';
+            let url = COMMENT_API + '?userId=' + encodeURIComponent(UID);
+            if (commentTab === 'essay') {
+                const essayId = document.getElementById('cmt-essay').value;
+                url += '&essayId=' + encodeURIComponent(essayId);
+            }
             try {
-                const r = await fetch(COMMENT_API + '?essayId=' + encodeURIComponent(essayId) + '&userId=' + encodeURIComponent(UID));
+                const r = await fetch(url);
                 if (!r.ok) throw new Error('http ' + r.status);
                 const data = await r.json();
                 renderComments(data.comments || []);
@@ -1068,7 +1116,9 @@
             const list = document.getElementById('cmt-list');
             list.innerHTML = '';
             if (!comments.length) {
-                list.innerHTML = '<div class="cmt-empty">还没有人留言，来当第一个吧 🌸</div>';
+                list.innerHTML = '<div class="cmt-empty">' +
+                    (commentTab === 'all' ? '还没有任何留言，来当第一个吧 🌸' : '这篇作品还没有留言，来当第一个吧 🌸') +
+                    '</div>';
                 return;
             }
             comments.forEach(c => list.appendChild(buildCommentItem(c)));
@@ -1077,6 +1127,13 @@
         function buildCommentItem(c) {
             const item = document.createElement('div');
             item.className = 'cmt-item';
+
+            if (commentTab === 'all' && c.essayTitle) {
+                const tag = document.createElement('div');
+                tag.className = 'cmt-essay-tag';
+                tag.textContent = '📖 ' + c.essayTitle;
+                item.appendChild(tag);
+            }
 
             const meta = document.createElement('div'); meta.className = 'cmt-meta';
             const name = document.createElement('span'); name.className = 'cmt-name'; name.textContent = c.name;
@@ -1107,6 +1164,39 @@
                 btn.classList.toggle('liked', d.likedByMe);
                 btn.textContent = (d.likedByMe ? '❤ ' : '🤍 ') + d.likes;
             } catch (e) { /* 网络异常时保持原状态，不误导用户 */ }
+            finally { btn.disabled = false; }
+        }
+
+        async function loadEssayLike() {
+            const essayId = document.getElementById('cmt-essay').value;
+            const btn = document.getElementById('elike-btn');
+            const cnt = document.getElementById('elike-count');
+            try {
+                const r = await fetch(ESSAY_LIKE_API + '?essayId=' + encodeURIComponent(essayId) + '&userId=' + encodeURIComponent(UID));
+                if (!r.ok) throw new Error();
+                const d = await r.json();
+                btn.classList.toggle('liked', d.likedByMe);
+                btn.textContent = d.likedByMe ? '❤' : '🤍';
+                cnt.textContent = d.likes;
+            } catch (e) { /* 加载失败保留默认 0/白心，不误导 */ }
+        }
+
+        async function toggleEssayLike() {
+            const essayId = parseInt(document.getElementById('cmt-essay').value, 10);
+            const btn = document.getElementById('elike-btn');
+            const method = btn.classList.contains('liked') ? 'DELETE' : 'POST';
+            btn.disabled = true;
+            try {
+                const r = await fetch(ESSAY_LIKE_API, {
+                    method, headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ essayId, userId: UID })
+                });
+                if (!r.ok) throw new Error();
+                const d = await r.json();
+                btn.classList.toggle('liked', d.likedByMe);
+                btn.textContent = d.likedByMe ? '❤' : '🤍';
+                document.getElementById('elike-count').textContent = d.likes;
+            } catch (e) { /* 网络异常保持原状态 */ }
             finally { btn.disabled = false; }
         }
 
@@ -1151,8 +1241,18 @@
                 document.getElementById('cmt-count').textContent = e.target.value.length + '/500';
             });
             document.getElementById('cmt-submit').addEventListener('click', submitComment);
-            document.getElementById('cmt-essay').addEventListener('change', loadComments);
+            document.getElementById('cmt-essay').addEventListener('change', () => { loadComments(); loadEssayLike(); });
+            document.getElementById('elike-btn').addEventListener('click', toggleEssayLike);
             document.getElementById('scrim').addEventListener('click', closeComment);
+            document.querySelectorAll('.cmt-tab').forEach(t => {
+                t.addEventListener('click', () => {
+                    if (t.classList.contains('active')) return;
+                    document.querySelectorAll('.cmt-tab').forEach(x => x.classList.remove('active'));
+                    t.classList.add('active');
+                    commentTab = t.dataset.tab;
+                    loadComments();
+                });
+            });
         }
 
         /* ---------------------- 事件绑定 ---------------------- */

@@ -21,3 +21,13 @@ CREATE TABLE IF NOT EXISTS likes (
   PRIMARY KEY (message_id, user_id)
 );
 CREATE INDEX IF NOT EXISTS idx_likes_msg ON likes(message_id);
+
+-- 作品点赞表： (essay_id, user_id) 联合主键 → 天然保证“一人一赞”
+-- 点赞 = INSERT；取消赞 = DELETE；赞数 = COUNT(*)，与评论点赞同构
+CREATE TABLE IF NOT EXISTS essay_likes (
+  essay_id     INTEGER NOT NULL,
+  user_id      TEXT    NOT NULL,
+  created_at   INTEGER NOT NULL,
+  PRIMARY KEY (essay_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_essay_likes ON essay_likes(essay_id);

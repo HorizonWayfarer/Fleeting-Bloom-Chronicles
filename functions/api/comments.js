@@ -1,5 +1,6 @@
 // Fleeting-Bloom-Chronicles · 留言接口
-// GET  /api/comments?essayId=<int>&userId=<str>  列出某作品全部留言（含赞数/本人是否已赞）
+// GET  /api/comments?essayId=<int>&userId=<str>  列出某作品留言（升序，含赞数/本人是否已赞）
+// GET  /api/comments?userId=<str>                列出全部作品留言（跨作品，按时间倒序，总览用）
 // POST /api/comments                              新增留言
 // 数据存于 Cloudflare D1（绑定名 DB）。
 
@@ -23,18 +24,31 @@ export async function onRequest(context) {
   const url = new URL(request.url);
 
   if (request.method === 'GET') {
-    const essayId = parseInt(url.searchParams.get('essayId') || '-1', 10);
+    const essayIdRaw = url.searchParams.get('essayId');
     const userId = url.searchParams.get('userId') || '';
-    if (isNaN(essayId) || essayId < 0) return json({ error: 'invalid essayId' }, 400);
 
-    const rows = await env.DB.prepare(`
-      SELECT m.id, m.essay_id, m.essay_title, m.name, m.text, m.created_at,
-             (SELECT COUNT(*) FROM likes l WHERE l.message_id = m.id) AS likes,
-             (SELECT COUNT(*) FROM likes l WHERE l.message_id = m.id AND l.user_id = ?) AS liked
-      FROM messages m
-      WHERE m.essay_id = ?
-      ORDER BY m.created_at ASC
-    `).bind(userId, essayId).all();
+    let rows;
+    if (essayIdRaw === null || essayIdRaw === '') {
+      // 全部留言：跨作品，按时间倒序（最新在前），用于“全部留言”总览
+      rows = await env.DB.prepare(`
+        SELECT m.id, m.essay_id, m.essay_title, m.name, m.text, m.created_at,
+               (SELECT COUNT(*) FROM likes l WHERE l.message_id = m.id) AS likes,
+               (SELECT COUNT(*) FROM likes l WHERE l.message_id = m.id AND l.user_id = ?) AS liked
+        FROM messages m
+        ORDER BY m.created_at DESC
+      `).bind(userId).all();
+    } else {
+      const essayId = parseInt(essayIdRaw, 10);
+      if (isNaN(essayId) || essayId < 0) return json({ error: 'invalid essayId' }, 400);
+      rows = await env.DB.prepare(`
+        SELECT m.id, m.essay_id, m.essay_title, m.name, m.text, m.created_at,
+               (SELECT COUNT(*) FROM likes l WHERE l.message_id = m.id) AS likes,
+               (SELECT COUNT(*) FROM likes l WHERE l.message_id = m.id AND l.user_id = ?) AS liked
+        FROM messages m
+        WHERE m.essay_id = ?
+        ORDER BY m.created_at ASC
+      `).bind(userId, essayId).all();
+    }
 
     const comments = (rows.results || []).map((r) => ({
       id: r.id,
