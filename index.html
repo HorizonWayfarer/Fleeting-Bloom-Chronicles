@@ -218,6 +218,7 @@
         .lyrics .line {
             font-size: 15px; line-height: 44px; color: var(--ink-soft);
             transition: color 0.3s, transform 0.3s; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis;
         }
         .lyrics .line.active { color: var(--hai-pink-d); font-weight: 600; transform: scale(1.04); }
 
@@ -288,10 +289,26 @@
            ============================================================ */
         @media (max-width: 768px) {
             .topbar .essay-name { display: none; }
-            .lyrics { display: none; }
+            /* 手机端显示歌词（原为 display:none） */
             .music-ctrl { width: auto; }
             .music-ctrl .meta { display: none; }
             .sidebar { width: 84vw; }
+
+            /* 手机端歌词：显示当前句；过长自动横向滚动（滚动歌词），否则省略号兜底 */
+            .lyrics { display: block; height: 44px; }
+            .lyrics .line { font-size: 14px; text-align: center; }
+            .lyrics .line.scroll {
+                text-align: left;
+                text-overflow: clip;
+                overflow: visible;
+                animation: lyric-marquee 9s linear infinite;
+                will-change: transform;
+            }
+        }
+        /* 当前句过长时的横向滚动（仅手机端 .scroll 生效） */
+        @keyframes lyric-marquee {
+            0%, 8%   { transform: translateX(0); }
+            92%, 100% { transform: translateX(var(--lyric-shift, 0)); }
         }
     </style>
 </head>
@@ -767,6 +784,16 @@
             const box = document.getElementById('lyrics');
             if (idx < 0 || idx >= state.lrc.length) return;
             box.innerHTML = '<div class="line active">' + state.lrc[idx].text + '</div>';
+            // 手机端：当前句比容器宽则自动横向滚动（滚动歌词），否则保持省略号
+            const line = box.querySelector('.line');
+            if (line) {
+                line.classList.remove('scroll');
+                line.style.removeProperty('--lyric-shift');
+                if (line.scrollWidth - box.clientWidth > 4) {
+                    line.classList.add('scroll');
+                    line.style.setProperty('--lyric-shift', -(line.scrollWidth - box.clientWidth) + 'px');
+                }
+            }
         }
         function playMusic() { bgm.play(); state.musicOn = true; document.getElementById('btn-play').textContent = '❚❚'; }
         function pauseMusic() { if (bgm && !bgm.paused) { bgm.pause(); document.getElementById('btn-play').textContent = '▶'; } }
