@@ -10,4 +10,4 @@ compatibility_date = "2024-11-01"
 binding = "DB"
 database_name = "fbc-comments"
 # 首次建库后把 database_id 填到这里（仅本地 dev 需要；生产用 Dashboard 绑定）
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "504ab0a2-e163-484b-a3bc-9bb13d3196b7"
