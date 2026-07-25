@@ -1,0 +1,13 @@
+# Cloudflare Pages + D1 配置
+# 说明：本文件主要用于本地开发（wrangler pages dev）时把 D1 绑定进来。
+# 生产环境（Cloudflare Pages 后台）的 D1 绑定请在 Dashboard 设置：
+#   Settings → Functions → D1 数据库绑定 → 变量名填 "DB"，数据库选 fbc-comments
+name = "fleeting-bloom-chronicles"
+pages_build_output_dir = "."
+compatibility_date = "2024-11-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fbc-comments"
+# 首次建库后把 database_id 填到这里（仅本地 dev 需要；生产用 Dashboard 绑定）
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"

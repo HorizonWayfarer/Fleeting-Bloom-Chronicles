@@ -267,6 +267,56 @@
         .scrim.show { opacity: 1; pointer-events: auto; }
 
         /* ============================================================
+           4.5 留言板面板（从右侧滑出）
+           ============================================================ */
+        .cpanel {
+            position: fixed; top: 0; right: 0; bottom: 0; width: 384px; z-index: 60;
+            background: var(--paper-page); border-left: 1px solid var(--line);
+            transform: translateX(100%); transition: transform 0.35s ease;
+            display: flex; flex-direction: column;
+            box-shadow: -6px 0 30px var(--shadow);
+        }
+        .cpanel.open { transform: translateX(0); }
+        .cpanel .sb-head h3 { font-family: 'Dutch 801 Roman BT', serif; color: var(--hai-pink-d); letter-spacing: 2px; }
+
+        .cform { padding: 16px 20px; border-bottom: 1px solid var(--line); }
+        .cf-label { display: block; font-size: 13px; color: var(--ink-soft); margin: 12px 0 6px; }
+        .cf-label:first-child { margin-top: 0; }
+        .cf-select, .cf-input, .cf-textarea {
+            width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+            background: var(--paper); color: var(--ink); font-family: inherit; font-size: 14px;
+        }
+        .cf-textarea { resize: vertical; min-height: 84px; line-height: 1.5; }
+        .cf-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+        #cmt-count { font-size: 12px; color: var(--ink-soft); }
+        .cf-submit {
+            background: var(--hai-pink-d); color: #fff; border: none; padding: 9px 18px;
+            border-radius: 10px; font-family: inherit; font-size: 14px; cursor: pointer; transition: opacity .2s;
+        }
+        .cf-submit:disabled { opacity: .5; cursor: default; }
+        .cf-hint { font-size: 11px; color: var(--ink-soft); margin-top: 6px; line-height: 1.4; }
+
+        .cmt-list { flex: 1; overflow-y: auto; padding: 12px 16px 28px; }
+        .cmt-item {
+            padding: 12px 14px; border-radius: 12px; background: var(--paper);
+            margin-bottom: 10px; border: 1px solid var(--line);
+        }
+        .cmt-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+        .cmt-name { font-size: 14px; color: var(--hai-pink-d); font-weight: 600; }
+        .cmt-time { font-size: 11px; color: var(--ink-soft); margin-left: auto; }
+        .cmt-text { font-size: 14px; color: var(--ink); white-space: pre-wrap; word-break: break-word; line-height: 1.55; }
+        .cmt-like {
+            margin-top: 10px; display: inline-flex; align-items: center; gap: 6px;
+            background: var(--hai-pink-l); border: none; border-radius: 20px; padding: 4px 12px;
+            cursor: pointer; color: var(--hai-pink-d); font-size: 13px; font-family: inherit; transition: background .2s, color .2s;
+        }
+        .cmt-like.liked { background: var(--hai-pink); color: #fff; }
+        .cmt-empty, .cmt-err { text-align: center; padding: 30px 12px; font-size: 14px; }
+        .cmt-empty { color: var(--ink-soft); }
+        .cmt-err { color: var(--hai-pink-d); }
+        @media (max-width: 768px) { .cpanel { width: 90vw; } }
+
+        /* ============================================================
            4. 模态框（图片放大 / 视频播放）
            ============================================================ */
         .modal {
@@ -384,6 +434,31 @@
     <div class="modal" id="video-modal">
         <button class="close" data-close>✕</button>
         <video id="video-modal-src" controls playsinline></video>
+    </div>
+
+    <!-- 留言板面板 -->
+    <div class="cpanel" id="cpanel">
+        <div class="sb-head">
+            <h3>留言板</h3>
+            <button class="icon-btn" id="btn-comment-close" title="关闭">✕</button>
+        </div>
+        <div class="cform">
+            <label class="cf-label" for="cmt-essay">评论作品</label>
+            <select id="cmt-essay" class="cf-select"></select>
+
+            <label class="cf-label" for="cmt-name">你的名字</label>
+            <select id="cmt-name" class="cf-select"></select>
+            <input type="text" id="cmt-custom" class="cf-input" placeholder="输入自定义名字" style="display:none; margin-top:8px;">
+
+            <label class="cf-label" for="cmt-text">留言内容</label>
+            <textarea id="cmt-text" class="cf-textarea" maxlength="500" placeholder="写下你想对这篇作品说的话…（最多 500 字）"></textarea>
+            <div class="cf-foot">
+                <span id="cmt-count">0/500</span>
+                <button id="cmt-submit" class="cf-submit">发送留言</button>
+            </div>
+            <div class="cf-hint">留言存储于 Cloudflare D1，默认以“访客”身份发布；选择班级姓名或自定义名字更有纪念意义 🌸</div>
+        </div>
+        <div class="cmt-list" id="cmt-list"></div>
     </div>
 
     <!-- ===================== 依赖脚本（先加载） ===================== -->
@@ -884,6 +959,7 @@
             buildToc();
             setupMusic();
             updatePageInfo(1);
+            bindCommentUI();
 
             detail.textContent = '准备就绪，点击翻开';
             const btn = document.getElementById('btn-open');
@@ -898,6 +974,187 @@
             });
         }
 
+        /* ============================================================
+           模块 H：留言板（作品下拉 + 姓名下拉 + 点赞）
+           ============================================================ */
+        const ROSTER = [
+            '王予凡','张同泽','范柏唱','郭永尚','杨博文','王禹涵','柴鼎旭','张心茹','闫奥若','谢承睿',
+            '刘庆豪','黄蕊','王甲慧','李晓婧','张成林','孙博瑞','胡美萱','刘志航','李承阳','张有强',
+            '贯梓悦','刘博涵','王艺诺','刘宇轩','孙学峰','韩依晨','王绪颖','郭洪妍','黄伟超','陈秋雯',
+            '吕筱雯','冯羽童','张长鑫','刘泽田','彭岑','王玉山','赵潞祎','杨学昊','窦予男','李富雨',
+            '魏雨润','刘芮扬','刘亦晗','孙明妍','李语嫣','张斯博'
+        ];
+        const COMMENT_API = '/api/comments';
+        const LIKE_API = '/api/like';
+        const UID = (() => {
+            let u = localStorage.getItem('fbc_uid');
+            if (!u) { u = 'u_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); localStorage.setItem('fbc_uid', u); }
+            return u;
+        })();
+
+        function buildCommentForm() {
+            const selE = document.getElementById('cmt-essay');
+            selE.innerHTML = '';
+            (state.data.pages || []).forEach((e, i) => {
+                if (!e || e.type !== 'essay') return;
+                const o = document.createElement('option');
+                o.value = String(i);
+                o.textContent = e.author + ' · ' + e.title;
+                selE.appendChild(o);
+            });
+            const selN = document.getElementById('cmt-name');
+            selN.innerHTML = '';
+            const mk = (val, label, def) => {
+                const o = document.createElement('option');
+                o.value = val; o.textContent = label;
+                if (def) o.selected = true;
+                selN.appendChild(o);
+            };
+            mk('访客', '访客（默认）', true);
+            ROSTER.forEach(n => mk(n, n));
+            mk('教师', '教师');
+            mk('__custom__', '自定义名字…');
+        }
+
+        function currentEssayIdx() {
+            try {
+                const page = $('#flipbook').turn('page');
+                const p = state.flipPages[page - 1];
+                if (p && p.type === 'essay') return p.essayIdx;
+            } catch (e) {}
+            return 0;
+        }
+
+        function openComment() {
+            const idx = currentEssayIdx();
+            const selE = document.getElementById('cmt-essay');
+            if (selE.options.length && idx != null) selE.value = String(idx);
+            document.getElementById('cpanel').classList.add('open');
+            document.getElementById('scrim').classList.add('show');
+            loadComments();
+        }
+        function closeComment() {
+            document.getElementById('cpanel').classList.remove('open');
+            if (!document.getElementById('sidebar').classList.contains('open'))
+                document.getElementById('scrim').classList.remove('show');
+        }
+
+        function timeAgo(ts) {
+            const s = Math.floor((Date.now() - ts) / 1000);
+            if (s < 60) return '刚刚';
+            const m = Math.floor(s / 60); if (m < 60) return m + ' 分钟前';
+            const h = Math.floor(m / 60); if (h < 24) return h + ' 小时前';
+            const day = Math.floor(h / 24); if (day < 30) return day + ' 天前';
+            const dt = new Date(ts);
+            const p = (n) => String(n).padStart(2, '0');
+            return dt.getFullYear() + '-' + p(dt.getMonth() + 1) + '-' + p(dt.getDate());
+        }
+
+        async function loadComments() {
+            const list = document.getElementById('cmt-list');
+            const essayId = document.getElementById('cmt-essay').value;
+            list.innerHTML = '<div class="cmt-empty">加载中…</div>';
+            try {
+                const r = await fetch(COMMENT_API + '?essayId=' + encodeURIComponent(essayId) + '&userId=' + encodeURIComponent(UID));
+                if (!r.ok) throw new Error('http ' + r.status);
+                const data = await r.json();
+                renderComments(data.comments || []);
+            } catch (e) {
+                list.innerHTML = '<div class="cmt-err">留言加载失败 😢<br>请确认站点已部署在 Cloudflare（含 D1 绑定）</div>';
+            }
+        }
+
+        function renderComments(comments) {
+            const list = document.getElementById('cmt-list');
+            list.innerHTML = '';
+            if (!comments.length) {
+                list.innerHTML = '<div class="cmt-empty">还没有人留言，来当第一个吧 🌸</div>';
+                return;
+            }
+            comments.forEach(c => list.appendChild(buildCommentItem(c)));
+        }
+
+        function buildCommentItem(c) {
+            const item = document.createElement('div');
+            item.className = 'cmt-item';
+
+            const meta = document.createElement('div'); meta.className = 'cmt-meta';
+            const name = document.createElement('span'); name.className = 'cmt-name'; name.textContent = c.name;
+            const time = document.createElement('span'); time.className = 'cmt-time'; time.textContent = timeAgo(c.createdAt);
+            meta.appendChild(name); meta.appendChild(time);
+
+            const text = document.createElement('div'); text.className = 'cmt-text'; text.textContent = c.text;
+
+            const like = document.createElement('button');
+            like.className = 'cmt-like' + (c.likedByMe ? ' liked' : '');
+            like.textContent = (c.likedByMe ? '❤ ' : '🤍 ') + c.likes;
+            like.addEventListener('click', () => toggleLike(c.id, like));
+
+            item.appendChild(meta); item.appendChild(text); item.appendChild(like);
+            return item;
+        }
+
+        async function toggleLike(id, btn) {
+            const method = btn.classList.contains('liked') ? 'DELETE' : 'POST';
+            btn.disabled = true;
+            try {
+                const r = await fetch(LIKE_API, {
+                    method, headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messageId: id, userId: UID })
+                });
+                if (!r.ok) throw new Error();
+                const d = await r.json();
+                btn.classList.toggle('liked', d.likedByMe);
+                btn.textContent = (d.likedByMe ? '❤ ' : '🤍 ') + d.likes;
+            } catch (e) { /* 网络异常时保持原状态，不误导用户 */ }
+            finally { btn.disabled = false; }
+        }
+
+        async function submitComment() {
+            const selE = document.getElementById('cmt-essay');
+            const selN = document.getElementById('cmt-name');
+            const custom = document.getElementById('cmt-custom');
+            const ta = document.getElementById('cmt-text');
+            const essayId = parseInt(selE.value, 10);
+            const essayTitle = (state.data.pages[essayId] && state.data.pages[essayId].title) || '';
+            let name = selN.value;
+            if (name === '__custom__') name = custom.value.trim() || '访客';
+            const text = ta.value.trim();
+            if (!text) { ta.focus(); return; }
+
+            const btn = document.getElementById('cmt-submit');
+            btn.disabled = true; btn.textContent = '发送中…';
+            try {
+                const r = await fetch(COMMENT_API, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ essayId, essayTitle, name, text, userId: UID })
+                });
+                if (!r.ok) throw new Error();
+                ta.value = ''; document.getElementById('cmt-count').textContent = '0/500';
+                loadComments();
+            } catch (e) {
+                alert('发送失败，请检查网络或部署配置 😢');
+            } finally {
+                btn.disabled = false; btn.textContent = '发送留言';
+            }
+        }
+
+        function bindCommentUI() {
+            buildCommentForm();
+            document.getElementById('btn-comment').addEventListener('click', openComment);
+            document.getElementById('btn-comment-close').addEventListener('click', closeComment);
+            document.getElementById('cmt-name').addEventListener('change', (e) => {
+                document.getElementById('cmt-custom').style.display =
+                    (e.target.value === '__custom__') ? 'block' : 'none';
+            });
+            document.getElementById('cmt-text').addEventListener('input', (e) => {
+                document.getElementById('cmt-count').textContent = e.target.value.length + '/500';
+            });
+            document.getElementById('cmt-submit').addEventListener('click', submitComment);
+            document.getElementById('cmt-essay').addEventListener('change', loadComments);
+            document.getElementById('scrim').addEventListener('click', closeComment);
+        }
+
         /* ---------------------- 事件绑定 ---------------------- */
         document.getElementById('btn-play').addEventListener('click', toggleMusic);
         document.getElementById('btn-prev').addEventListener('click', () => $('#flipbook').turn('previous'));
@@ -906,7 +1163,6 @@
         document.getElementById('btn-toc-close').addEventListener('click', closeSidebar);
         document.getElementById('scrim').addEventListener('click', closeSidebar);
         document.getElementById('toc-search').addEventListener('input', (e) => filterToc(e.target.value));
-        document.getElementById('btn-comment').addEventListener('click', () => alert('留言板开发中，敬请期待 🌸'));
 
         document.addEventListener('keydown', (e) => {
             if (!document.getElementById('app').classList.contains('show')) return;
